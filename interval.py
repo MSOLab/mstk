@@ -1,12 +1,17 @@
 """ Interval by datetime class definition
-Created at 8th Aug 2020
+Created at 8th Aug. 2020
 """
+# common Python packages
 import datetime as dt
 from typing import Tuple
+
+# defined packages
+import to_dt
 
 
 class Interval:
     """interval with start & end datetime value
+    (start <= end) must hold true in initialization
     """
 
     __slots__ = ["start", "end"]
@@ -14,15 +19,10 @@ class Interval:
     end: dt.datetime
 
     def __init__(self, start, end):
-        if isinstance(start, dt.datetime):
-            self.start: dt.datetime = start
-        else:
-            self.start: dt.datetime = dt.datetime.fromtimestamp(start)
-
-        if isinstance(end, dt.datetime):
-            self.end: dt.datetime = end
-        else:
-            self.end: dt.datetime = dt.datetime.fromtimestamp(end)
+        if start > end:
+            raise ValueError("Interval start after end!")
+        self.start = to_dt.to_dt_datetime(start)
+        self.end = to_dt.to_dt_datetime(end)
 
     def duration(self) -> dt.timedelta:
         """return (end - start) timedelta value
@@ -39,11 +39,7 @@ class Interval:
         return (self.start, self.end - self.start)
 
     def in_closed_interval(self, moment) -> bool:
-        _moment: dt.datetime
-        if isinstance(moment, dt.datetime):
-            _moment = moment
-        else:
-            _moment = dt.datetime.fromtimestamp(moment)
+        _moment = to_dt.to_dt_datetime(moment)
         if self.start <= _moment and _moment <= self.end:
             return True
         else:

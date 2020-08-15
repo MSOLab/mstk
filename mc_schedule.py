@@ -25,6 +25,9 @@ class MCSchedule:
         self.ac_dict: Dict[str, Activity] = dict()
         # count of Activities by type: +1 when add_activity, -1 when delete_ac_id
         self.ac_counts = {ac_type: 0 for ac_type in ac_types.all_types}
+        self.ac_cum_counts = {ac_type: 0 for ac_type in ac_types.all_types}
+
+        self.initialize_idle()
 
     def initialize_idle(self):
         """Initialize MCSchedule's first idle Activity instance
@@ -32,7 +35,9 @@ class MCSchedule:
         idle_id = self.make_ac_id_for_type(self.idle_type)
         initial_idle = Activity(idle_id, self.idle_type, self.horizon)
         self.ac_dict[initial_idle.ac_id] = initial_idle
+        self.ac_id_list += [initial_idle.ac_id]
         self.ac_counts[self.idle_type] = 1
+        self.ac_cum_counts[self.idle_type] = 1
 
     def make_ac_id_for_type(self, ac_type: str) -> str:
         """Make ac_id with postfix starting with number 1
@@ -43,7 +48,7 @@ class MCSchedule:
         Returns:
             str: new ac_id
         """
-        return_string = f"{ac_type}{self.ac_counts[ac_type]}"
+        return_string = f"{ac_type}{self.ac_cum_counts[ac_type]}"
         return return_string
 
     def ac_iter(self) -> Iterator[Activity]:
@@ -221,8 +226,7 @@ class MCSchedule:
         if not self.is_idle_only(_interval):
             _str = f"Impossible add_activity request on machine {self.mc_id} "
             _str += f"with given interval {_interval} and type {ac.ac_type}"
-            print(_str)
-            return False
+            raise ValueError(f"Interval {interval} is occupied")
 
         target_ac_id = self.ac_id_list_of_interval(_interval)[0]
         target_ac = self.ac_dict[target_ac_id]
@@ -238,9 +242,11 @@ class MCSchedule:
             idle_after_ac = Activity(idle_id, self.idle_type, new_interval)
             added_ac_list.append(idle_after_ac)
             self.ac_counts[self.idle_type] += 1
+            self.ac_cum_counts[self.idle_type] += 1
 
         added_ac_list.append(ac)
         self.ac_counts[ac.ac_type] += 1
+        self.ac_cum_counts[ac.ac_type] += 1
 
         new_start_time: dt.datetime
         if target_ac.interval.start != _interval.start:
@@ -250,13 +256,13 @@ class MCSchedule:
             idle_before_ac = Activity(idle_id, self.idle_type, new_interval)
             added_ac_list.append(idle_before_ac)
             self.ac_counts[self.idle_type] += 1
+            self.ac_cum_counts[self.idle_type] += 1
 
         self.ac_counts[self.idle_type] -= 1
         self.delete_ac_id(target_ac_id)
         for added_ac in added_ac_list:
             self.ac_id_list.insert(target_ac_idx, added_ac.ac_id)
             self.ac_dict[added_ac.ac_id] = added_ac
-        return True
 
     def del_activities_in_interval(self, given_interval: Interval):
         """Delete all activities within given interval
@@ -336,6 +342,7 @@ class MCSchedule:
             self.ac_id_list.insert(first_ac_idx, idle_id)
             self.ac_dict[idle_id] = new_idle_activity
             self.ac_counts[self.idle_type] += 1
+            self.ac_cum_counts[self.idle_type] += 1
 
     def idle_interval_list(self, release_date) -> List[Interval]:
         """
@@ -389,3 +396,32 @@ class MCSchedule:
                 return_interval = ac.interval
                 break
         return return_interval
+
+
+def main():
+    ac_types = AcTypes("ac_types.json", "utf-8", True, True)
+    machine_schedule_1 = MCSchedule("test machine", Interval(0, 20), ac_types)
+
+    # add activity test
+
+    ac_operation_1 = Activity("test ops 1", ac_types.operation, Interval(1, 3))
+    ac_setup_1 = Activity("test setup 1", ac_types.setup, Interval(0, 1))
+    ac_breakdown_1 = Activity(
+        "test brkdown 1", ac_types.breakdown, Interval(4, 8)
+    )
+    machine_schedule_1.add_activity(ac_operation_1)
+    machine_schedule_1.add_activity(ac_setup_1)
+    machine_schedule_1.add_activity(ac_breakdown_1)
+
+    for ac in machine_schedule_1.ac_iter():
+        print(ac)
+
+    # delete activity test
+    print("\ntest ops 1 deleted")
+    machine_schedule_1.del_activities_in_interval(ac_operation_1.interval)
+    for ac in machine_schedule_1.ac_iter():
+        print(ac)
+
+
+if __name__ == "__main__":
+    main()

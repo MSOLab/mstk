@@ -12,11 +12,15 @@ class Activity:
     ac_type: str
     interval: Interval
     op_id: str  # optional
+    # TODO: add job_info
 
     def __init__(self, ac_id: str, ac_type: str, interval: Interval):
         self.ac_id = ac_id
         self.ac_type = ac_type
         self.interval = interval
+
+    def __repr__(self) -> str:
+        return f"Activity {self.ac_id}: {self.interval}"
 
     def includes(self, moment) -> bool:
         """
@@ -32,7 +36,49 @@ class Activity:
         return False
 
     def change_start_time(self, new_start_time):
-        self.interval.start = new_start_time
+        """ 
+        Args:
+            new_start_time ([type]): datetime.datetime instance or numeric
+        """
+        self.interval.change_start_time(new_start_time)
 
     def change_end_time(self, new_end_time):
-        self.interval.end = new_end_time
+        """ 
+        Args:
+            new_start_time ([type]): datetime.datetime instance or numeric
+        """
+        self.interval.change_end_time(new_end_time)
+
+
+def main():
+    ac_idle = Activity("test idle 1", "idle", Interval(2, 5))
+    print("Original: ", ac_idle)
+
+    ### change time test
+
+    ac_idle.change_start_time(4)
+    print("Changed start time: ", ac_idle)
+
+    ac_idle.change_end_time(6)
+    print("Changed end time: ", ac_idle)
+
+    try:
+        ac_idle.change_start_time(7)
+    except ValueError as e:
+        print("ValueError: ", e)
+
+    try:
+        ac_idle.change_end_time(1)
+    except ValueError as e:
+        print("ValueError: ", e)
+
+    ### 'includes' test
+    print("\n", "is 3 included?:", ac_idle.includes(3))
+    print("is 4 included?:", ac_idle.includes(4))
+    print("is 5.5 included?:", ac_idle.includes(5.5))
+    print("is 6 included?:", ac_idle.includes(6))
+    print("is 7 included?:", ac_idle.includes(7))
+
+
+if __name__ == "__main__":
+    main()

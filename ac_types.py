@@ -22,6 +22,8 @@ class AcTypes:
         with open(filename, encoding=encoding) as file_data:
             input_dict = json.load(file_data)
             for key, value in input_dict.items():
+                if key == "_comment":
+                    continue
                 self.all_types.append(value)
                 self.__dict__[key] = value
         if not setup_exists:
@@ -30,7 +32,7 @@ class AcTypes:
         if not breakdown_exists:
             self.all_types.remove("breakdown")
             del self.__dict__["breakdown"]
-        if "idle" not in self.all_types:
+        if "idle" not in self.__dict__:
             raise ValueError("Type 'idle' and its display prefix should exist")
 
     def is_idle(self, given_type: str):

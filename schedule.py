@@ -29,9 +29,12 @@ class Schedule:
     """ A set of machine schedules and tools to edit the machine schedules
     """
 
-    def __init__(self, schedule_id: str, horizon: Interval, ac_types: AcTypes):
+    def __init__(
+        self, schedule_id: str, horizon: Interval, ac_types: AcTypes
+    ):
         self.schedule_id: str = schedule_id
         self.horizon: Interval = horizon
+        self.mc_id_list: List[str] = []
         self.mc_info_dict: Dict[str, MCInfoEssential] = {}
         self.mc_schedule_dict: Dict[str, MCSchedule] = {}
         self.ac_types: AcTypes = ac_types
@@ -52,12 +55,15 @@ class Schedule:
         if machine_id in self.mc_info_dict:
             raise KeyError(f"Machine {machine_id} already exists")
         else:
+            self.mc_id_list += [machine_id]
             self.mc_info_dict[machine_id] = machine_info
             self.mc_schedule_dict[machine_id] = MCSchedule(
                 machine_id, self.horizon, self.ac_types
             )
 
-    def add_operation_to_mc(self, machine_id: str, job_info: str, start, end):
+    def add_operation_to_mc(
+        self, machine_id: str, job_info: str, start, end
+    ):
         if machine_id not in self.mc_info_dict:
             raise KeyError(f"Machine {machine_id} does not exist")
         ac_type = self.ac_types.operation

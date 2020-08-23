@@ -143,7 +143,9 @@ class PlotSchedule:
         # Draw activities
         for target_mc_id in self.mc_list:
             target_mc_index = self.mc_list.index(target_mc_id)
-            target_mc_schedule = self.schedule.mc_schedule_dict[target_mc_id]
+            target_mc_schedule = self.schedule.mc_schedule_dict[
+                target_mc_id
+            ]
             for ac in target_mc_schedule.ac_iter():
                 # if ac.ac_type == self.schedule.ac_types.idle:
                 #     continue

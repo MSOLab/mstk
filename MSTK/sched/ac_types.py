@@ -13,10 +13,11 @@ class AcTypes:
 
     def __init__(
         self,
-        filename: str,
         encoding: str,
         setup_exists: bool,
         breakdown_exists: bool,
+        filename="sched/ac_type_options/default.json",
+        # TODO: use **kwargs to change ac_type json file location according to setup / brkdown
     ):
         self.all_types: List[str] = list()
         with open(filename, encoding=encoding) as file_data:
@@ -54,3 +55,12 @@ class AcTypes:
         if given_type == self.breakdown:
             return True
         return False
+
+
+def main():
+
+    ac_types = AcTypes("utf-8", True, True)
+
+
+if __name__ == "__main__":
+    main()

@@ -48,7 +48,9 @@ class MCSchedule:
         Returns:
             str: new ac_id
         """
-        return_string = f"{ac_type}{self.ac_cum_counts[ac_type]}"
+        return_string = (
+            f"{ac_type}({self.mc_id}-{self.ac_cum_counts[ac_type]})"
+        )
         return return_string
 
     def ac_iter(self) -> Iterator[Activity]:
@@ -399,7 +401,7 @@ class MCSchedule:
 
 
 def main():
-    ac_types = AcTypes("ac_types.json", "utf-8", True, True)
+    ac_types = AcTypes("utf-8", True, True)
     machine_schedule_1 = MCSchedule("test machine", Interval(0, 20), ac_types)
 
     # add activity test

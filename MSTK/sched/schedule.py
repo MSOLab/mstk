@@ -29,9 +29,7 @@ class Schedule:
     """ A set of machine schedules and tools to edit the machine schedules
     """
 
-    def __init__(
-        self, schedule_id: str, horizon: Interval, ac_types: AcTypes
-    ):
+    def __init__(self, schedule_id: str, horizon: Interval, ac_types: AcTypes):
         self.schedule_id: str = schedule_id
         self.horizon: Interval = horizon
         self.mc_id_list: List[str] = []
@@ -61,9 +59,7 @@ class Schedule:
                 machine_id, self.horizon, self.ac_types
             )
 
-    def add_operation_to_mc(
-        self, machine_id: str, job_info: str, start, end
-    ):
+    def add_operation_to_mc(self, machine_id: str, job_info: str, start, end):
         if machine_id not in self.mc_info_dict:
             raise KeyError(f"Machine {machine_id} does not exist")
         ac_type = self.ac_types.operation
@@ -103,12 +99,12 @@ def main():
     # from to_dt import to_dt_datetime
     # from datetime.datetime import strptime
     dt_format = "%m/%d/%Y %H:%M"
-    ac_types = AcTypes("ac_types.json", "utf-8", True, True)
+    ac_types = AcTypes("utf-8", True, True)
     horizon_start = dt.datetime.strptime("7/6/2020 00:00", dt_format)
-    horizon_end = dt.datetime.strptime("7/8/2020 00:00", dt_format)
+    horizon_end = dt.datetime.strptime("7/11/2020 00:00", dt_format)
     horizon = Interval(horizon_start, horizon_end)
     test_schedule = Schedule("test schedule", horizon, ac_types)
-    with open("test_schedule.csv", "r") as _inputfile:
+    with open("test/test_schedule.csv", "r") as _inputfile:
         job_list = list(csv.reader(_inputfile))[1:]
 
     # create machine list
@@ -129,7 +125,9 @@ def main():
         test_schedule.add_operation_to_mc(mc_id, job_info, start, end)
 
     for mc_sched in test_schedule.mc_iter():
-        print(mc_sched.hbar_tuple_list())
+        print(mc_sched.mc_id)
+        for ac in mc_sched.ac_iter():
+            print(ac)
 
 
 if __name__ == "__main__":

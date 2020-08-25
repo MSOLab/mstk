@@ -7,10 +7,10 @@ import datetime as dt
 from typing import List, Dict, Tuple, Any, Iterator
 
 # defined packages
-import to_dt
-from interval import Interval
-from activity import Activity
-from ac_types import AcTypes
+from mstk.schedule import to_dt
+from mstk.schedule.interval import Interval
+from mstk.schedule.activity import Activity
+from mstk.schedule.ac_types import AcTypes
 
 
 class MCSchedule:

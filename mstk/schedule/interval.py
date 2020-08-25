@@ -6,7 +6,7 @@ import datetime as dt
 from typing import Tuple
 
 # defined packages
-import to_dt
+from mstk.schedule import to_dt
 
 
 class Interval:

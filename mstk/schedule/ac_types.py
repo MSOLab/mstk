@@ -16,7 +16,7 @@ class AcTypes:
         encoding: str,
         setup_exists: bool,
         breakdown_exists: bool,
-        filename="sched/ac_type_options/default.json",
+        filename="schedule/ac_type_options/default.json",
         # TODO: use **kwargs to change ac_type json file location according to setup / brkdown
     ):
         self.all_types: List[str] = list()

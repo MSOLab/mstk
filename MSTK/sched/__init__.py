@@ -1,4 +1,0 @@
-    """
-    Modules for schedule management
-    """
-

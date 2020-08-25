@@ -1,7 +1,7 @@
 """ Interval by datetime class definition
 Created at 8th Aug. 2020
 """
-from interval import Interval
+from mstk.schedule.interval import Interval
 
 
 class Activity:

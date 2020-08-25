@@ -3,10 +3,10 @@ Created at 13th Aug. 2020
 """
 
 from typing import List, Dict, Iterator
-from interval import Interval
-from mc_schedule import MCSchedule
-from ac_types import AcTypes
-from activity import Activity
+from mstk.schedule.interval import Interval
+from mstk.schedule.mc_schedule import MCSchedule
+from mstk.schedule.ac_types import AcTypes
+from mstk.schedule.activity import Activity
 
 # class StaticMCInfo:
 #     """A storage of machine info that is not relevant to scheduling

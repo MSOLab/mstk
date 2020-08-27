@@ -3,6 +3,9 @@ Created at 10th Aug. 2020
 """
 import json
 from typing import List
+import os
+
+current_path = os.path.dirname(os.path.abspath(__file__))
 
 
 class AcTypes:
@@ -16,7 +19,7 @@ class AcTypes:
         encoding: str,
         setup_exists: bool,
         breakdown_exists: bool,
-        filename="schedule/ac_type_options/default.json",
+        filename=f"{current_path}/ac_type_options/default.json",
         # TODO: use **kwargs to change ac_type json file location according to setup / brkdown
     ):
         self.all_types: List[str] = list()

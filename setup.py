@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="MSTK",
+    name="mstk",
     version="0.0.1",
     author="MSO Lab",
     author_email="mso.postech@gmail.com",

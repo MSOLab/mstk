@@ -1,5 +1,5 @@
 from typing import List, Dict, Iterator
-from schedule import Schedule
+from mstk.schedule.schedule import Schedule
 import matplotlib
 from matplotlib import pyplot as plt
 import matplotlib.patches as patches
@@ -143,9 +143,7 @@ class PlotSchedule:
         # Draw activities
         for target_mc_id in self.mc_list:
             target_mc_index = self.mc_list.index(target_mc_id)
-            target_mc_schedule = self.schedule.mc_schedule_dict[
-                target_mc_id
-            ]
+            target_mc_schedule = self.schedule.mc_schedule_dict[target_mc_id]
             for ac in target_mc_schedule.ac_iter():
                 # if ac.ac_type == self.schedule.ac_types.idle:
                 #     continue
@@ -174,20 +172,22 @@ class PlotSchedule:
 
 
 def main():
-    from read_test_schedule import read_data
-    from interval import Interval
+    from mstk.visualize.read_test_schedule import read_data
+    from mstk.schedule.interval import Interval
     import datetime as dt
 
     dt_format = "%m/%d/%Y %H:%M"
 
     horizon_start = dt.datetime.strptime("7/6/2020 00:00", dt_format)
-    horizon_end = dt.datetime.strptime("7/11/2020 00:00", dt_format)
+    horizon_end = dt.datetime.strptime("7/9/2020 06:00", dt_format)
     horizon = Interval(horizon_start, horizon_end)
 
-    test_schedule = read_data("test_scheduling.csv", horizon)
-    plt_schedule = PlotSchedule(test_schedule, "interactive")
-    plt_schedule.draw_Gantt()
-    plt.show()
+    test_schedule = read_data(
+        "D:/Projects/MSTK/mstk/test/med_test_schedule.csv", horizon
+    )
+    # plt_schedule = PlotSchedule(test_schedule, "interactive")
+    # plt_schedule.draw_Gantt()
+    # plt.show()
 
     plt_schedule = PlotSchedule(test_schedule, "save")
     plt_schedule.draw_Gantt()

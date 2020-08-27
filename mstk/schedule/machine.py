@@ -13,6 +13,24 @@ from mstk.schedule.activity import Activity
 from mstk.schedule.ac_types import AcTypes
 
 
+class Machine:
+    def __init__(self, mc_id):
+        self.mc_id: str = mc_id
+        self.info = MCInfo(mc_id)
+        # TODO fill the contents in
+
+
+class MCInfo:
+    """
+    A storage of machine info that is not used in scheduling
+    """
+
+    def __init__(self, mc_id: str):
+        self.mc_id: str = mc_id
+
+        # TODO: fill the contents in
+
+
 class MCSchedule:
     """A schedule of a machine in datetime format
     """
@@ -188,6 +206,8 @@ class MCSchedule:
             err_str += f"{self.horizon} of MCSchedule of machine {self.mc_id}"
             raise ValueError(err_str)
 
+    # TODO: return object, not id
+    # TODO: provide options for operations that overlays a boundary value
     def ac_id_list_of_interval(self, given_interval: Interval) -> List[str]:
         self.error_if_interval_outside_horizon(given_interval)
         return_list: List[str] = list()

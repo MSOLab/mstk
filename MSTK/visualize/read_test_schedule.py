@@ -1,11 +1,11 @@
 import csv
 import datetime as dt
 
-from interval import Interval
-from mc_schedule import MCSchedule
-from ac_types import AcTypes
-from activity import Activity
-from schedule import Schedule, MCInfoEssential
+from mstk.schedule.interval import Interval
+from mstk.schedule.mc_schedule import MCSchedule
+from mstk.schedule.ac_types import AcTypes
+from mstk.schedule.activity import Activity
+from mstk.schedule.schedule import Schedule, MCInfoEssential
 
 
 def read_data(filename, horizon):
@@ -13,7 +13,7 @@ def read_data(filename, horizon):
     # from to_dt import to_dt_datetime
     # from datetime.datetime import strptime
     dt_format = "%m/%d/%Y %H:%M"
-    ac_types = AcTypes("ac_types.json", "utf-8", True, True)
+    ac_types = AcTypes("utf-8", True, True)
     # horizon_start = dt.datetime.strptime("7/6/2020 00:00", dt_format)
     # horizon_end = dt.datetime.strptime("7/10/2020 06:00", dt_format)
     # horizon = Interval(horizon_start, horizon_end)
@@ -42,7 +42,7 @@ def read_data(filename, horizon):
 
 
 def main():
-    test_schedule = read_data("test_schedule.csv")
+    test_schedule = read_data("D:/Projects/MSTK/mstk/test/test_schedule.csv")
     for mc_sched in test_schedule.mc_iter():
         for ac in mc_sched.ac_iter():
             print(ac)

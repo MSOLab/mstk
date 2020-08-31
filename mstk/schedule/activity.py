@@ -2,16 +2,20 @@
 Created at 8th Aug. 2020
 """
 from mstk.schedule.interval import Interval
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from mstk.schedule.machine import Machine
+    from mstk.schedule.job import Job
 
 
 class Activity:
-    """activity with id, type, interval
-    """
+    """activity with id, type, interval"""
 
     ac_id: str
     ac_type: str
     interval: Interval
-    op_id: str  # optional
+    # op_id: str  # optional
     # TODO: add job_info
 
     def __init__(self, ac_id: str, ac_type: str, interval: Interval):
@@ -36,18 +40,38 @@ class Activity:
         return False
 
     def change_start_time(self, new_start_time):
-        """ 
+        """
         Args:
             new_start_time ([type]): datetime.datetime instance or numeric
         """
         self.interval.change_start_time(new_start_time)
 
     def change_end_time(self, new_end_time):
-        """ 
+        """
         Args:
             new_start_time ([type]): datetime.datetime instance or numeric
         """
         self.interval.change_end_time(new_end_time)
+
+
+class Operation(Activity):
+    def __init__(
+        self,
+        ac_id: str,
+        ac_type: str,
+        mc: "Machine",
+        job: "Job",
+        interval: Interval,
+        # TODO: change ac_type as a global param
+    ):
+        self.ac_id = ac_id
+        self.ac_type = ac_type
+        self.interval = interval
+        self.mc = mc
+        self.job = job
+
+    def __repr__(self) -> str:
+        return f"Operation {self.ac_id}: {self.interval}"
 
 
 def main():
@@ -73,7 +97,8 @@ def main():
         print("ValueError: ", e)
 
     ### 'includes' test
-    print("\n", "is 3 included?:", ac_idle.includes(3))
+    print("\n")
+    print("is 3 included?:", ac_idle.includes(3))
     print("is 4 included?:", ac_idle.includes(4))
     print("is 5.5 included?:", ac_idle.includes(5.5))
     print("is 6 included?:", ac_idle.includes(6))

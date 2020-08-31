@@ -4,88 +4,113 @@ Created at 13th Aug. 2020
 
 from typing import List, Dict, Iterator
 from mstk.schedule.interval import Interval
-from mstk.schedule.mc_schedule import MCSchedule
+from mstk.schedule.machine import Machine
 from mstk.schedule.ac_types import AcTypes
-from mstk.schedule.activity import Activity
-
-# class StaticMCInfo:
-#     """A storage of machine info that is not relevant to scheduling
-#     """
-
-#     # TODO: fill the contents in
-
-
-class MCInfoEssential:
-    """A storage of machine info that is used in scheduling
-    """
-
-    def __init__(self, machine_id: str):
-        self.machine_id: str = machine_id
-
-        # TODO: fill the contents in
+from mstk.schedule.activity import Activity, Operation
+from mstk.schedule.job import Job
+from datetime import datetime
 
 
 class Schedule:
-    """ A set of machine schedules and tools to edit the machine schedules
-    """
+    """A set of machine schedules and tools to edit the machine schedules"""
 
     def __init__(self, schedule_id: str, horizon: Interval, ac_types: AcTypes):
         self.schedule_id: str = schedule_id
         self.horizon: Interval = horizon
+
         self.mc_id_list: List[str] = []
-        self.mc_info_dict: Dict[str, MCInfoEssential] = {}
-        self.mc_schedule_dict: Dict[str, MCSchedule] = {}
+        self.mc_dict: Dict[str, Machine] = {}
+
+        self.job_id_list: List[str] = []
+        self.job_dict: Dict[str, Job] = {}
+
         self.ac_types: AcTypes = ac_types
 
     def __repr__(self) -> str:
         return f"Schedule ({self.schedule_id})"
 
-    def mc_iter(self) -> Iterator[MCSchedule]:
+    def mc_iter(self) -> Iterator[Machine]:
         """
         Yields:
-            Iterator[MCSchedule]:
+            Iterator[Machine]:
         """
-        for mc_schedule in self.mc_schedule_dict.values():
-            yield mc_schedule
+        for mc_id in self.mc_id_list:
+            yield self.mc_dict[mc_id]
 
-    def add_machine(self, machine_info: MCInfoEssential):
-        machine_id = machine_info.machine_id
-        if machine_id in self.mc_info_dict:
-            raise KeyError(f"Machine {machine_id} already exists")
+    def job_iter(self) -> Iterator[Job]:
+        """
+        Yields:
+            Iterator[Job]:
+        """
+        for job_id in self.job_id_list:
+            yield self.job_dict[job_id]
+
+    def add_machine(self, mc_id: str):
+        if mc_id in self.mc_id_list:
+            raise KeyError(f"Machine {mc_id} already exists")
         else:
-            self.mc_id_list += [machine_id]
-            self.mc_info_dict[machine_id] = machine_info
-            self.mc_schedule_dict[machine_id] = MCSchedule(
-                machine_id, self.horizon, self.ac_types
-            )
+            mc = Machine(mc_id, self.ac_types)
+            self.mc_id_list += [mc_id]
+            self.mc_dict[mc_id] = mc
+            mc.reset_schedule(self.horizon)
 
-    def add_operation_to_mc(self, machine_id: str, job_info: str, start, end):
-        if machine_id not in self.mc_info_dict:
-            raise KeyError(f"Machine {machine_id} does not exist")
+    def add_job(self, job_id: str):
+        if job_id in self.job_id_list:
+            raise KeyError(f"Job {job_id} already exists")
+        else:
+            job = Job(job_id)
+            self.job_id_list += [job_id]
+            self.job_dict[job_id] = job
+
+    # def add_job(self, job:Job):
+
+    def add_operation(
+        self,
+        mc_id: str,
+        job_id: str,
+        start: datetime,
+        end: datetime,
+        oper_id: str = "",
+    ):
+        if mc_id not in self.mc_id_list:
+            raise KeyError(f"Machine {mc_id} does not exist")
+        if job_id not in self.job_id_list:
+            raise KeyError(f"Job {job_id} does not exist")
         ac_type = self.ac_types.operation
-        machine_info = self.mc_info_dict[machine_id]
+        mc = self.mc_dict[mc_id]
+        job = self.job_dict[job_id]
+
         # TODO: use mc info to create id
         # TODO: connect job info
 
-        target_mc_schedule = self.mc_schedule_dict[machine_id]
+        target_mc_schedule = mc.mc_schedule
         operation_count = target_mc_schedule.ac_cum_counts[ac_type] + 1
-        operation_id = f"Operation({machine_id}-{operation_count})"
-        new_activity = Activity(
-            operation_id, self.ac_types.operation, Interval(start, end)
+        if oper_id == "":
+            operation_id = f"Operation({mc_id}-{operation_count})"
+        else:
+            operation_id = oper_id
+        new_operation = Operation(
+            operation_id,
+            self.ac_types.operation,
+            mc,
+            job,
+            Interval(start, end),
         )
-        new_activity.job_info = job_info
-        target_mc_schedule.add_activity(new_activity)
+        # new_activity.job_info = job_info
+        target_mc_schedule.add_activity(new_operation)
+        job.add_operation(new_operation)
 
-    def add_breakdown_to_mc(self, machine_id: str, start, end):
-        if machine_id not in self.mc_info_dict:
-            raise KeyError(f"Machine {machine_id} does not exist")
+    def add_breakdown(self, mc_id: str, start: datetime, end: datetime):
+        if mc_id not in self.mc_id_list:
+            raise KeyError(f"Machine {mc_id} does not exist")
+
         ac_type = self.ac_types.breakdown
-        machine_info = self.mc_info_dict[machine_id]
+        mc = self.mc_dict[mc_id]
         # TODO: use mc info to create id
 
-        target_mc_schedule = self.mc_schedule_dict[machine_id]
+        target_mc_schedule = mc.mc_schedule
         breakdown_count = target_mc_schedule.ac_cum_counts[ac_type] + 1
-        breakdown_id = f"Brkdwn({machine_id}-{breakdown_count})"
+        breakdown_id = f"Brkdwn({mc_id}-{breakdown_count})"
         new_activity = Activity(breakdown_id, ac_type, Interval(start, end))
         target_mc_schedule.add_activity(new_activity)
 
@@ -104,25 +129,33 @@ def main():
     horizon_end = dt.datetime.strptime("7/11/2020 00:00", dt_format)
     horizon = Interval(horizon_start, horizon_end)
     test_schedule = Schedule("test schedule", horizon, ac_types)
-    with open("test/test_schedule.csv", "r") as _inputfile:
-        job_list = list(csv.reader(_inputfile))[1:]
 
-    # create machine list
+    from mstk.test import small_data_filename
+
+    with open(small_data_filename, "r") as _inputfile:
+        oper_list = list(csv.reader(_inputfile))[1:]
+
+    # create machine and list
     machine_list = []
-    for job in job_list:
-        mc_id = job[1]
+    job_list = []
+    for operation in oper_list:
+        mc_id = operation[1]
         if mc_id not in machine_list:
             machine_list += [mc_id]
-            mc_info = MCInfoEssential(mc_id)
-            test_schedule.add_machine(mc_info)
+            test_schedule.add_machine(mc_id)
+        job_id = operation[4]
+        if job_id not in job_list:
+            job_list += [job_id]
+            test_schedule.add_job(job_id)
 
-    # create job list
-    for job in job_list:
-        mc_id = job[1]
-        start = dt.datetime.strptime(job[2], dt_format)
-        end = dt.datetime.strptime(job[3], dt_format)
-        job_info = job[4]
-        test_schedule.add_operation_to_mc(mc_id, job_info, start, end)
+    # create operation list
+    for operation in oper_list:
+        mc_id = operation[1]
+        start = dt.datetime.strptime(operation[2], dt_format)
+        end = dt.datetime.strptime(operation[3], dt_format)
+        job_id = operation[4]
+
+        test_schedule.add_operation(mc_id, job_id, start, end)
 
     for mc_sched in test_schedule.mc_iter():
         print(mc_sched.mc_id)
@@ -132,4 +165,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

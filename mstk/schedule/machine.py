@@ -14,10 +14,21 @@ from mstk.schedule.ac_types import AcTypes
 
 
 class Machine:
-    def __init__(self, mc_id):
+    def __init__(self, mc_id, ac_types):
         self.mc_id: str = mc_id
         self.info = MCInfo(mc_id)
+        self.ac_types = ac_types
         # TODO fill the contents in
+
+    def reset_schedule(self, horizon: Interval):
+        self.mc_schedule = MCSchedule(self.mc_id, horizon, self.ac_types)
+
+    def ac_iter(self) -> Iterator[Activity]:
+        """
+        Yields:
+            Iterator[Activity]
+        """
+        return self.mc_schedule.ac_iter()
 
 
 class MCInfo:
@@ -25,15 +36,16 @@ class MCInfo:
     A storage of machine info that is not used in scheduling
     """
 
+    contents: Dict[str, str]
+
     def __init__(self, mc_id: str):
         self.mc_id: str = mc_id
-
+        self.contents = {}
         # TODO: fill the contents in
 
 
 class MCSchedule:
-    """A schedule of a machine in datetime format
-    """
+    """A schedule of a machine in datetime format"""
 
     def __init__(self, mc_id: str, horizon: Interval, ac_types: AcTypes):
         self.mc_id: str = mc_id
@@ -48,8 +60,7 @@ class MCSchedule:
         self.initialize_idle()
 
     def initialize_idle(self):
-        """Initialize MCSchedule's first idle Activity instance
-        """
+        """Initialize MCSchedule's first idle Activity instance"""
         idle_id = self.make_ac_id_for_type(self.idle_type)
         initial_idle = Activity(idle_id, self.idle_type, self.horizon)
         self.ac_dict[initial_idle.ac_id] = initial_idle
@@ -248,7 +259,7 @@ class MCSchedule:
         if not self.is_idle_only(_interval):
             _str = f"Impossible add_activity request on machine {self.mc_id} "
             _str += f"with given interval {_interval} and type {ac.ac_type}"
-            raise ValueError(f"Interval {interval} is occupied")
+            raise ValueError(f"Interval {_interval} is occupied")
 
         target_ac_id = self.ac_id_list_of_interval(_interval)[0]
         target_ac = self.ac_dict[target_ac_id]
@@ -285,6 +296,8 @@ class MCSchedule:
         for added_ac in added_ac_list:
             self.ac_id_list.insert(target_ac_idx, added_ac.ac_id)
             self.ac_dict[added_ac.ac_id] = added_ac
+
+        return True
 
     def del_activities_in_interval(self, given_interval: Interval):
         """Delete all activities within given interval
@@ -421,27 +434,38 @@ class MCSchedule:
 
 
 def main():
+    from mstk.schedule.activity import Operation
+    from mstk.schedule.job import Job
+
     ac_types = AcTypes("utf-8", True, True)
-    machine_schedule_1 = MCSchedule("test machine", Interval(0, 20), ac_types)
+    machine_1 = Machine("test machine 1", ac_types)
+    machine_1.reset_schedule(Interval(0, 20))
+    job_1 = Job("Job_1")
+    mc_schedule_1 = machine_1.mc_schedule
 
     # add activity test
-
-    ac_operation_1 = Activity("test ops 1", ac_types.operation, Interval(1, 3))
+    ac_operation_1 = Operation(
+        "test ops 1",
+        ac_types.operation,
+        machine_1,
+        job_1,
+        Interval(1, 3),
+    )
     ac_setup_1 = Activity("test setup 1", ac_types.setup, Interval(0, 1))
     ac_breakdown_1 = Activity(
         "test brkdown 1", ac_types.breakdown, Interval(4, 8)
     )
-    machine_schedule_1.add_activity(ac_operation_1)
-    machine_schedule_1.add_activity(ac_setup_1)
-    machine_schedule_1.add_activity(ac_breakdown_1)
+    mc_schedule_1.add_activity(ac_operation_1)
+    mc_schedule_1.add_activity(ac_setup_1)
+    mc_schedule_1.add_activity(ac_breakdown_1)
 
-    for ac in machine_schedule_1.ac_iter():
+    for ac in mc_schedule_1.ac_iter():
         print(ac)
 
     # delete activity test
     print("\ntest ops 1 deleted")
-    machine_schedule_1.del_activities_in_interval(ac_operation_1.interval)
-    for ac in machine_schedule_1.ac_iter():
+    mc_schedule_1.del_activities_in_interval(ac_operation_1.interval)
+    for ac in mc_schedule_1.ac_iter():
         print(ac)
 
 

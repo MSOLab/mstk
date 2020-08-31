@@ -1,19 +1,14 @@
 from typing import List, Dict, Iterator
 from mstk.schedule.schedule import Schedule
 import matplotlib
-import matplotlib.style as mplstyle
 from matplotlib import pyplot as plt
 from matplotlib.collections import PatchCollection
-from matplotlib.colors import ListedColormap
 import matplotlib.patches as patches
 import matplotlib.dates as mdates
 from natsort import natsorted
 from mstk.visualize.color_map import Cmap
-from numpy import arange
 
-# import matplotlib.backends.backend_qt5agg
 matplotlib.use("Qt5Agg")
-mplstyle.use("fast")
 
 
 class PlotSchedule:

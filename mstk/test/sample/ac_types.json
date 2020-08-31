@@ -1,0 +1,7 @@
+{
+    "_comment": "Activity instance types with display prefixes",
+    "idle": "Idle_",
+    "operation": "Operation_",
+    "setup": "Setup_",
+    "breakdown": "Breakdown_"
+}

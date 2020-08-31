@@ -40,3 +40,12 @@ class Job:
         """
         for operation in self.operation_list:
             yield operation
+
+    def add_contents(self, key: str, value):
+        """adds additional contents to Machine
+
+        Args:
+            key (str): [description]
+            value ([type]): [description]
+        """
+        self.contents[key] = value

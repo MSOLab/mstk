@@ -57,7 +57,7 @@ def read_schedule(proj_folder: str):
     ###
     ### Add activities
     ###
-
+    core_entity_list = ["mc_id", "ac_type", "job_id", "start", "end"]
     with open(
         proj_folder + "\\activity_info.csv", "r", encoding="utf-8"
     ) as file_data:
@@ -70,7 +70,11 @@ def read_schedule(proj_folder: str):
             end = dt_parse(item["end"])
 
             if ac_type == ac_types.operation:
-                schedule.add_operation(mc_id, job_id, start, end)
+                ac = schedule.add_operation(mc_id, job_id, start, end)
+            for key, value in item.items():
+                if key in core_entity_list:
+                    continue
+                ac.add_contents(key, value)
     return schedule
 
 

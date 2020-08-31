@@ -15,11 +15,10 @@ from mstk.schedule.ac_types import AcTypes
 
 class Machine:
     mc_id: str
-    contents: Dict[str, str]
+    contents: Dict[str, Any]
 
     def __init__(self, mc_id, ac_types):
         self.mc_id: str = mc_id
-        # self.info = MCInfo(mc_id)
         self.ac_types = ac_types
         self.contents = {}
         # TODO fill the contents in
@@ -34,27 +33,14 @@ class Machine:
         """
         return self.mc_schedule.ac_iter()
 
-    def add_contents(self, key: str, value):
+    def add_contents(self, key: str, value: Any):
         """adds additional contents to Machine
 
         Args:
             key (str): [description]
-            value ([type]): [description]
+            value (Any): [description]
         """
         self.contents[key] = value
-
-
-# class MCInfo:
-#     """
-#     A storage of machine info that is not used in scheduling
-#     """
-
-#     contents: Dict[str, str]
-
-#     def __init__(self, mc_id: str):
-#         self.mc_id: str = mc_id
-#         self.contents = {}
-#         # TODO: fill the contents in
 
 
 class MCSchedule:

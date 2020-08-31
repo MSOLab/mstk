@@ -1,12 +1,15 @@
 from typing import List, Dict, Iterator
+
 from mstk.schedule.schedule import Schedule
+from mstk.visualize.color_map import Cmap
+
 import matplotlib
 from matplotlib import pyplot as plt
 from matplotlib.collections import PatchCollection
 import matplotlib.patches as patches
 import matplotlib.dates as mdates
+
 from natsort import natsorted
-from mstk.visualize.color_map import Cmap
 
 matplotlib.use("Qt5Agg")
 

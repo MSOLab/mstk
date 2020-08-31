@@ -2,7 +2,7 @@
 Created at 8th Aug. 2020
 """
 from mstk.schedule.interval import Interval
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, Any
 
 if TYPE_CHECKING:
     from mstk.schedule.machine import Machine
@@ -15,6 +15,7 @@ class Activity:
     ac_id: str
     ac_type: str
     interval: Interval
+    contents: Dict[str, Any]
     # op_id: str  # optional
     # TODO: add job_info
 
@@ -22,6 +23,7 @@ class Activity:
         self.ac_id = ac_id
         self.ac_type = ac_type
         self.interval = interval
+        self.contents = {}
 
     def __repr__(self) -> str:
         return f"Activity {self.ac_id}: {self.interval}"
@@ -53,6 +55,15 @@ class Activity:
         """
         self.interval.change_end_time(new_end_time)
 
+    def add_contents(self, key: str, value: Any):
+        """adds additional contents to Machine
+
+        Args:
+            key (str): [description]
+            value (Any): [description]
+        """
+        self.contents[key] = value
+
 
 class Operation(Activity):
     def __init__(
@@ -69,6 +80,7 @@ class Operation(Activity):
         self.interval = interval
         self.mc = mc
         self.job = job
+        self.contents = {}
 
     def __repr__(self) -> str:
         return f"Operation {self.ac_id}: {self.interval}"

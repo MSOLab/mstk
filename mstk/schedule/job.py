@@ -1,11 +1,11 @@
-from typing import List, Dict, Iterator
+from typing import List, Dict, Any, Iterator
 from mstk.schedule.activity import Operation
 
 
 class Job:
 
     job_id: str
-    contents: Dict[str, str]
+    contents: Dict[str, Any]
     operation_list = List[Operation]
 
     def __init__(self, job_id):
@@ -41,11 +41,11 @@ class Job:
         for operation in self.operation_list:
             yield operation
 
-    def add_contents(self, key: str, value):
+    def add_contents(self, key: str, value: Any):
         """adds additional contents to Machine
 
         Args:
             key (str): [description]
-            value ([type]): [description]
+            value (Any): [description]
         """
         self.contents[key] = value

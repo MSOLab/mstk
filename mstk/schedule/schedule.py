@@ -102,6 +102,8 @@ class Schedule:
         target_mc_schedule.add_activity(new_operation)
         job.add_operation(new_operation)
 
+        return new_operation
+
     def add_breakdown(self, mc_id: str, start: datetime, end: datetime):
         if mc_id not in self.mc_id_list:
             raise KeyError(f"Machine {mc_id} does not exist")

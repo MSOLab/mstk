@@ -72,19 +72,33 @@ class PlotSchedule:
                 proc = end - start
 
                 (face_color, font_color) = self.cmap.material_cmap(color_id)
-
-                alpha_value = 0.8
+                alpha_value = 1
+                edge_color = None
+                linestyle = None
+                # linewidth = None
                 if ac.ac_type == self.schedule.ac_types.idle:
                     face_color = "k"
                     alpha_value = 0.1
+                if ac.ac_type == self.schedule.ac_types.breakdown:
+                    face_color = "#ffebee"
+                    edge_color = "k"
+                    linestyle = "--"
 
                 ac_patch = patches.Rectangle(
                     (start, 1.1 * target_mc_index),
                     proc,
                     1,
                     facecolor=face_color,
+                    alpha=alpha_value,
+                    edgecolor=edge_color,
+                    linestyle=linestyle,
                 )
+
                 ac_patch.ac = ac
+
+                # if ac.ac_type == self.schedule.ac_types.breakdown:
+                #     self.ax_main.add_patch(ac_patch)
+                # else:
                 self.ac_patch_list += [ac_patch]
                 color_id += 1
 

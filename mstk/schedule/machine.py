@@ -433,7 +433,7 @@ class MCSchedule:
 
 
 def main():
-    from mstk.schedule.activity import Operation
+    from mstk.schedule.activity import Operation, Breakdown
     from mstk.schedule.job import Job
 
     ac_types = AcTypes("utf-8", True, True)
@@ -451,8 +451,8 @@ def main():
         Interval(1, 3),
     )
     ac_setup_1 = Activity("test setup 1", ac_types.setup, Interval(0, 1))
-    ac_breakdown_1 = Activity(
-        "test brkdown 1", ac_types.breakdown, Interval(4, 8)
+    ac_breakdown_1 = Breakdown(
+        "test brkdown 1", ac_types.breakdown, machine_1, Interval(4, 8)
     )
     mc_schedule_1.add_activity(ac_operation_1)
     mc_schedule_1.add_activity(ac_setup_1)

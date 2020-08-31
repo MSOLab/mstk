@@ -71,6 +71,8 @@ def read_schedule(proj_folder: str):
 
             if ac_type == ac_types.operation:
                 ac = schedule.add_operation(mc_id, job_id, start, end)
+            elif ac_type == ac_types.breakdown:
+                ac = schedule.add_breakdown(mc_id, start, end)
             for key, value in item.items():
                 if key in core_entity_list:
                     continue

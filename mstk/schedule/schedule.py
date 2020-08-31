@@ -6,7 +6,7 @@ from typing import List, Dict, Iterator
 from mstk.schedule.interval import Interval
 from mstk.schedule.machine import Machine
 from mstk.schedule.ac_types import AcTypes
-from mstk.schedule.activity import Activity, Operation
+from mstk.schedule.activity import Activity, Operation, Breakdown
 from mstk.schedule.job import Job
 from datetime import datetime
 
@@ -114,9 +114,13 @@ class Schedule:
 
         target_mc_schedule = mc.mc_schedule
         breakdown_count = target_mc_schedule.ac_cum_counts[ac_type] + 1
-        breakdown_id = f"Brkdwn({mc_id}-{breakdown_count})"
-        new_activity = Activity(breakdown_id, ac_type, Interval(start, end))
+        breakdown_id = f"Breakdown({mc_id}-{breakdown_count})"
+        new_activity = Breakdown(
+            breakdown_id, ac_type, mc, Interval(start, end)
+        )
         target_mc_schedule.add_activity(new_activity)
+
+        return new_activity
 
     # TODO: def add_setup_to_mc
 

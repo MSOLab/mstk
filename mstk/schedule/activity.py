@@ -65,6 +65,25 @@ class Activity:
         self.contents[key] = value
 
 
+class Breakdown(Activity):
+    def __init__(
+        self,
+        ac_id: str,
+        ac_type: str,
+        mc: "Machine",
+        interval: Interval,
+        # TODO: change ac_type as a global param
+    ):
+        self.ac_id = ac_id
+        self.ac_type = ac_type
+        self.interval = interval
+        self.mc = mc
+        self.contents = {}
+
+    def __repr__(self) -> str:
+        return f"Breakdown {self.ac_id}: {self.interval}"
+
+
 class Operation(Activity):
     def __init__(
         self,

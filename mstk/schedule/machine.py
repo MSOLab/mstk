@@ -258,7 +258,9 @@ class MCSchedule:
         if not self.is_idle_only(_interval):
             _str = f"Impossible add_activity request on machine {self.mc_id} "
             _str += f"with given interval {_interval} and type {ac.ac_type}"
-            raise ValueError(f"Interval {_interval} is occupied")
+            raise ValueError(
+                f"{_interval} is occupied in Machine {self.mc_id}"
+            )
 
         target_ac_id = self.ac_id_list_of_interval(_interval)[0]
         target_ac = self.ac_dict[target_ac_id]

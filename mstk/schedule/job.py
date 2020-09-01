@@ -6,7 +6,7 @@ class Job:
 
     job_id: str
     contents: Dict[str, Any]
-    operation_list = List[Operation]
+    operation_list: List[Operation]
 
     def __init__(self, job_id):
         self.job_id = job_id

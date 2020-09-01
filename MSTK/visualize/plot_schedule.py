@@ -56,7 +56,7 @@ class PlotSchedule:
         # Draw activities
 
         # TODO: change colors according to the properties
-        color_id = 0
+        job_list = self.schedule.job_id_list
 
         for target_mc_id in self.mc_id_list:
             target_mc_index = self.mc_id_list.index(target_mc_id)
@@ -71,11 +71,14 @@ class PlotSchedule:
                 end = mdates.date2num(ac.interval.end)
                 proc = end - start
 
-                (face_color, font_color) = self.cmap.material_cmap(color_id)
+                # (face_color, font_color) = self.cmap.material_cmap(color_id)
                 alpha_value = 1
                 edge_color = None
                 linestyle = None
                 # linewidth = None
+                if ac.ac_type == self.schedule.ac_types.operation:
+                    job_id = job_list.index(ac.job.job_id)
+                    face_color = self.cmap.material_cmap(job_id)[0]
                 if ac.ac_type == self.schedule.ac_types.idle:
                     face_color = "k"
                     alpha_value = 0.1
@@ -100,7 +103,7 @@ class PlotSchedule:
                 #     self.ax_main.add_patch(ac_patch)
                 # else:
                 self.ac_patch_list += [ac_patch]
-                color_id += 1
+                # color_id += 1
 
         patch_collection = PatchCollection(
             self.ac_patch_list, match_original=True

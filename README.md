@@ -1,2 +1,3 @@
-# MSO_scheduling
-Opensource Python library for scheduling, supported by [MSO Lab](http://msolab.org)
+# mstk
+Machine Scheduling ToolKit, an opensource Python library for machine scheduling
+Supported by [MSO Lab](http://msolab.org)

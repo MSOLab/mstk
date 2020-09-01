@@ -22,17 +22,22 @@ class PlotSchedule:
     def __init__(self, schedule: Schedule):
         self.schedule = schedule
         self.mc_id_list = natsorted(schedule.mc_id_list)
+        self.mc_id_list.reverse()
+        self.job_id_list = natsorted(schedule.job_id_list)
+
         self.fig = plt.figure(
             figsize=(20, len(self.schedule.mc_id_list) * 0.4)
         )
         self.ax_main = self.fig.add_subplot()
-
+        self.ax_main.set_title(f"{self.schedule.schedule_id}")
         self.format_ax_main()
         self.cmap = Cmap()
         self.ac_patch_list: List[str] = []
         self.ac_color_list: List[str] = []
 
     # TODO: implement sorting options for machines
+    # TODO: Add option for drawing horizontal lines
+    # TODO: Add legends option
 
     def format_ax_main(self):
         # set limits in ax_main
@@ -51,15 +56,25 @@ class PlotSchedule:
         self.ax_main.set_yticks([1.1 * i + 0.55 for i in range(n)])
         self.ax_main.set_yticklabels(self.mc_id_list)
 
+    def draw_legend(self):
+        job_list = self.job_id_list
+        for job_id in job_list:
+            color_id = job_list.index(job_id)
+            face_color = self.cmap.material_cmap(color_id)[0]
+            legend_patch = patches.Rectangle(
+                (0, 0), 0, 0, facecolor=face_color, alpha=1, label=job_id
+            )
+            self.ax_main.add_patch(legend_patch)
+        self.ax_main.legend()
+
     def draw_Gantt(self):
 
         # Draw activities
 
         # TODO: change colors according to the properties
         job_list = self.schedule.job_id_list
-
-        for target_mc_id in self.mc_id_list:
-            target_mc_index = self.mc_id_list.index(target_mc_id)
+        for target_mc_index, target_mc_id in enumerate(self.mc_id_list):
+            # target_mc_index = self.mc_id_list.index(target_mc_id)
             target_mc_schedule = self.schedule.mc_dict[
                 target_mc_id
             ].mc_schedule
@@ -99,16 +114,28 @@ class PlotSchedule:
 
                 ac_patch.ac = ac
 
-                # if ac.ac_type == self.schedule.ac_types.breakdown:
-                #     self.ax_main.add_patch(ac_patch)
-                # else:
                 self.ac_patch_list += [ac_patch]
-                # color_id += 1
+                self.ax_main.add_patch(ac_patch)
 
-        patch_collection = PatchCollection(
-            self.ac_patch_list, match_original=True
-        )
-        self.ax_main.add_collection(patch_collection)
+        ### Using PatchCollection for efficient rendering
+        ### Warning: event handler may be malfunctioning
+
+        # self.patch_collection = PatchCollection(
+        #     self.ac_patch_list, match_original=True
+        # )
+        # self.ax_main.add_collection(self.patch_collection)
+
+        def on_patch_click(event):
+            # Iterating over each data member plotted
+            for patch in self.ac_patch_list:
+                # Searching which data member corresponds to current mouse position
+                cont, ind = patch.contains(event)
+                if cont:
+                    print(patch.ac.job.job_id)
+
+        self.fig.canvas.mpl_connect("button_press_event", on_patch_click)
+        self.draw_legend()
+        plt.show()
 
 
 def main():

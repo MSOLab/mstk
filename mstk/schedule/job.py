@@ -4,14 +4,22 @@ from mstk.schedule.activity import Operation
 
 class Job:
 
-    job_id: str
+    __job_id: str
     contents: Dict[str, Any]
     operation_list: List[Operation]
 
     def __init__(self, job_id):
-        self.job_id = job_id
+        self.__job_id: str = job_id
         self.operation_list = []
         self.contents = {}
+
+    @property
+    def job_id(self):
+        return self.__job_id
+
+    @job_id.setter
+    def job_id(self, _job_id):
+        self.__job_id = _job_id
 
     def add_operation(self, operation: Operation):
         """adds an operation to the operation list

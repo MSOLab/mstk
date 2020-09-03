@@ -25,8 +25,7 @@ class Interval:
         self.end = to_dt.to_dt_datetime(end)
 
     def duration(self) -> dt.timedelta:
-        """return (end - start) timedelta value
-        """
+        """return (end - start) timedelta value"""
         return self.end - self.start
 
     def range_tuple(self) -> Tuple[dt.datetime, dt.datetime]:

@@ -47,7 +47,7 @@ class MCSchedule:
     """A schedule of a machine in datetime format"""
 
     def __init__(self, mc_id: str, horizon: Interval, ac_types: AcTypes):
-        self.mc_id: str = mc_id
+        self.__mc_id: str = mc_id
         self.horizon: Interval = horizon
         self.idle_type = ac_types.idle
         self.ac_id_list: List[str] = list()
@@ -57,6 +57,10 @@ class MCSchedule:
         self.ac_cum_counts = {ac_type: 0 for ac_type in ac_types.all_types}
 
         self.initialize_idle()
+
+    @property
+    def mc_id(self):
+        return self.__mc_id
 
     def initialize_idle(self):
         """Initialize MCSchedule's first idle Activity instance"""

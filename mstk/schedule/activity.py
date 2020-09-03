@@ -12,21 +12,28 @@ if TYPE_CHECKING:
 class Activity:
     """activity with id, type, interval"""
 
-    ac_id: str
+    __ac_id: str
     ac_type: str
     interval: Interval
     contents: Dict[str, Any]
-    # op_id: str  # optional
-    # TODO: add job_info
+    # TODO: Consider adding a member -- mc: Machine
 
     def __init__(self, ac_id: str, ac_type: str, interval: Interval):
-        self.ac_id = ac_id
-        self.ac_type = ac_type
-        self.interval = interval
-        self.contents = {}
+        self.__ac_id: str = ac_id
+        self.ac_type: str = ac_type
+        self.interval: Interval = interval
+        self.contents: Dict[str, Any] = {}
+
+    @property
+    def ac_id(self):
+        return self.__ac_id
+
+    # @ac_id.setter
+    # def ac_id(self, ac_id):
+    #     self.__ac_id = ac_id
 
     def __repr__(self) -> str:
-        return f"Activity {self.ac_id}: {self.interval}"
+        return f"Activity {self.__ac_id}: {self.interval}"
 
     def includes(self, moment) -> bool:
         """
@@ -74,11 +81,15 @@ class Breakdown(Activity):
         interval: Interval,
         # TODO: change ac_type as a global param
     ):
-        self.ac_id = ac_id
+        self.__ac_id = ac_id
         self.ac_type = ac_type
         self.interval = interval
         self.mc = mc
         self.contents = {}
+
+    @property
+    def ac_id(self):
+        return self.__ac_id
 
     def __repr__(self) -> str:
         return f"Breakdown {self.ac_id}: {self.interval}"
@@ -94,7 +105,7 @@ class Operation(Activity):
         interval: Interval,
         # TODO: change ac_type as a global param
     ):
-        self.ac_id = ac_id
+        self.__ac_id = ac_id
         self.ac_type = ac_type
         self.interval = interval
         self.mc = mc
@@ -102,7 +113,11 @@ class Operation(Activity):
         self.contents = {}
 
     def __repr__(self) -> str:
-        return f"Operation {self.ac_id}: {self.interval}"
+        return f"Operation {self.__ac_id}: {self.interval}"
+
+    @property
+    def ac_id(self):
+        return self.__ac_id
 
 
 def main():

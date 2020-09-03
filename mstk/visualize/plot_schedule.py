@@ -19,7 +19,7 @@ class PlotSchedule:
     Later, the forms in this class are to be implemented in a PyQt5 form
     """
 
-    def __init__(self, schedule: Schedule):
+    def __init__(self, schedule: Schedule, **kwargs):
         self.schedule = schedule
         self.mc_id_list = natsorted(schedule.mc_id_list)
         self.mc_id_list.reverse()
@@ -34,6 +34,11 @@ class PlotSchedule:
         self.cmap = Cmap()
         self.ac_patch_list: List[str] = []
         self.ac_color_list: List[str] = []
+
+        if "legend_on" in kwargs:
+            self.legend_on = kwargs["legend_on"]
+        else:
+            self.legend_on = True
 
     # TODO: implement sorting options for machines
     # TODO: Add option for drawing horizontal lines
@@ -132,7 +137,7 @@ class PlotSchedule:
                 self.ac_patch_list += [ac_patch]
                 # self.ax_main.add_patch(ac_patch)
 
-        ### Using PatchCollection for efficient rendering
+        ### PatchCollection for efficient rendering
         self.patch_collection = PatchCollection(
             self.ac_patch_list, match_original=True
         )
@@ -147,7 +152,8 @@ class PlotSchedule:
                 print(self.ac_patch_list[index].ac.job.job_id)
 
         self.fig.canvas.mpl_connect("button_press_event", on_patch_click)
-        self.draw_legend()
+        if self.legend_on == True:
+            self.draw_legend()
         plt.show()
 
 
@@ -157,8 +163,8 @@ def main():
     from mstk.visualize.read_schedule import read_schedule
 
     test_schedule = read_schedule(sample_proj_folder)
-
-    plt_schedule = PlotSchedule(test_schedule)
+    plot_option = {"legend_on": False}
+    plt_schedule = PlotSchedule(test_schedule, **plot_option)
     plt_schedule.draw_Gantt()
     plt.show()
 

@@ -1,0 +1,8 @@
+{
+    "schedule_name": "sample_schedule",
+    "horizon": {
+        "option": "manual",
+        "start": "1/1/2020 00:00",
+        "end": "1/6/2020 00:00"
+    }
+}

@@ -3,6 +3,9 @@ Created at 10th Aug. 2020
 """
 import json
 from typing import List
+import os
+
+current_path = os.path.dirname(os.path.abspath(__file__))
 
 
 class AcTypes:
@@ -13,15 +16,18 @@ class AcTypes:
 
     def __init__(
         self,
-        filename: str,
         encoding: str,
         setup_exists: bool,
         breakdown_exists: bool,
+        filename=f"{current_path}/ac_type_options/default.json",
+        # TODO: use **kwargs to change ac_type json file location according to setup / brkdown
     ):
         self.all_types: List[str] = list()
         with open(filename, encoding=encoding) as file_data:
             input_dict = json.load(file_data)
             for key, value in input_dict.items():
+                if key == "_comment":
+                    continue
                 self.all_types.append(value)
                 self.__dict__[key] = value
         if not setup_exists:
@@ -30,7 +36,7 @@ class AcTypes:
         if not breakdown_exists:
             self.all_types.remove("breakdown")
             del self.__dict__["breakdown"]
-        if "idle" not in self.all_types:
+        if "idle" not in self.__dict__:
             raise ValueError("Type 'idle' and its display prefix should exist")
 
     def is_idle(self, given_type: str):
@@ -52,3 +58,12 @@ class AcTypes:
         if given_type == self.breakdown:
             return True
         return False
+
+
+def main():
+
+    ac_types = AcTypes("utf-8", True, True)
+
+
+if __name__ == "__main__":
+    main()

@@ -6,7 +6,7 @@ import datetime as dt
 from typing import Tuple
 
 # defined packages
-import to_dt
+from mstk.schedule import to_dt
 
 
 class Interval:
@@ -67,6 +67,42 @@ class Interval:
         else:
             print("Input is not an interval instance")
             return NotImplemented
+
+    def change_start_time(self, new_start_time):
+        """Update the start time after check validity
+
+        Args:
+            new_start_time ([type]): datetime.datetime instance or numeric
+
+        Raises:
+            ValueError: the interval range is invalid
+        """
+        dt_new_start_time = to_dt.to_dt_datetime(new_start_time)
+        if dt_new_start_time > self.end:
+            raise ValueError(
+                f"The new start time {dt_new_start_time}"
+                + f" comes after the end time {self.end}!"
+            )
+        else:
+            self.start = dt_new_start_time
+
+    def change_end_time(self, new_end_time):
+        """Update the end time after check validity
+
+        Args:
+            new_end_time ([type]): datetime.datetime instance or numeric
+
+        Raises:
+            ValueError: the interval range is invalid
+        """
+        dt_new_end_time = to_dt.to_dt_datetime(new_end_time)
+        if self.start > dt_new_end_time:
+            raise ValueError(
+                f"The new end time {dt_new_end_time}"
+                + f" precedes the start time {self.start}!"
+            )
+        else:
+            self.end = dt_new_end_time
 
 
 def main():

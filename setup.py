@@ -18,3 +18,5 @@ setuptools.setup(
     zip_safe=False,
     python_requires=">=3.7",
 )
+
+# TODO: add depedency for PyQt5

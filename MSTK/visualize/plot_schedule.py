@@ -57,7 +57,13 @@ class PlotSchedule:
         self.ax_main.set_yticklabels(self.mc_id_list)
 
     def draw_legend(self):
+        # TODO: Show the legend in another window using PyQt5
         job_list = self.job_id_list
+        ncol = int(len(job_list) / 20) + 1
+
+        self.fig_legend = plt.figure(figsize=(ncol * 1.4, 4), frameon=False)
+        self.ax_legend = self.fig_legend.add_subplot()
+
         self.legend_patch_list = []
         for job_id in job_list:
             color_id = job_list.index(job_id)
@@ -66,12 +72,14 @@ class PlotSchedule:
                 (0, 0), 0, 0, facecolor=face_color, alpha=1, label=job_id
             )
             self.legend_patch_list += [legend_patch]
-            self.ax_main.add_patch(legend_patch)
+            self.ax_legend.add_patch(legend_patch)
         # self.legend_patch_collection = PatchCollection(
         #     self.legend_patch_list, match_original=True
         # )
-        # self.ax_main.add_collection(self.legend_patch_collection)
-        self.ax_main.legend()
+        # self.ax_legend.add_collection(self.legend_patch_collection)
+        self.ax_legend.legend(ncol=ncol, loc="upper left")
+        self.ax_legend.axis("off")
+        self.fig_legend.tight_layout()
 
     def draw_Gantt(self):
 
@@ -124,23 +132,17 @@ class PlotSchedule:
                 # self.ax_main.add_patch(ac_patch)
 
         ### Using PatchCollection for efficient rendering
-        ### Warning: event handler may be malfunctioning
-
         self.patch_collection = PatchCollection(
             self.ac_patch_list, match_original=True
         )
         self.ax_main.add_collection(self.patch_collection)
 
         def on_patch_click(event):
-            # Iterating over each data member plotted
-            # for patch in self.ac_patch_list:
-            #     # Searching which data member corresponds to current mouse position
-            #     cont, ind = patch.contains(event)
-            #     if cont:
-            #         print(patch.ac.job.job_id)
+
             cont, ind = self.patch_collection.contains(event)
             if cont:
                 index = ind["ind"][0]
+                # TODO: implement print function for each activity type
                 print(self.ac_patch_list[index].ac.job.job_id)
 
         self.fig.canvas.mpl_connect("button_press_event", on_patch_click)

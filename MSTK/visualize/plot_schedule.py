@@ -79,6 +79,7 @@ class PlotSchedule:
         # self.ax_legend.add_collection(self.legend_patch_collection)
         self.ax_legend.legend(ncol=ncol, loc="upper left")
         self.ax_legend.axis("off")
+        self.fig_legend.canvas.toolbar.pack_forget()
         self.fig_legend.tight_layout()
 
     def draw_Gantt(self):

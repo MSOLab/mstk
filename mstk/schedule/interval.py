@@ -46,7 +46,7 @@ class Interval:
 
     def is_distinct(self, other) -> bool:
         if isinstance(other, Interval):
-            if self.end < other.start or other.end < self.start:
+            if self.end <= other.start or other.end <= self.start:
                 return True
             else:
                 return False

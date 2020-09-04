@@ -124,21 +124,11 @@ class Schedule:
 
     # TODO: def add_setup_to_mc
 
-    def transform_dt_to_horizon(
+    def transform_interval_to_horizon(
         self, interval: Interval, horizon: Interval, horz_overlap: str
     ):
-        if horz_overlap in ["include"]:
-            raise NotImplementedError(
-                "horz_overlap option 'include' results in an inconsistent mc_schedule"
-            )
-            # if (horizon.in_closed_interval(interval.start)) or (
-            #     horizon.in_closed_interval(interval.end)
-            # ):
-            #     return Interval(*interval.dt_range())
-            # else:
-            #     return None
 
-        elif horz_overlap in ["exclude"]:
+        if horz_overlap in ["exclude"]:
             if (horizon.in_closed_interval(interval.start)) and (
                 horizon.in_closed_interval(interval.end)
             ):
@@ -176,6 +166,10 @@ class Schedule:
             raise ValueError(
                 f"horz_overlap {horz_overlap} is invalid -- try one of {overlap_options}"
             )
+        elif horz_overlap in ["include"]:
+            raise NotImplementedError(
+                "horz_overlap option 'include' is yet prohibited to prevent an inconsistent mc_schedule"
+            )
 
         new_schedule = Schedule(schedule_id, new_horizon, self.ac_types)
 
@@ -189,7 +183,7 @@ class Schedule:
                 if ac.ac_type == self.ac_types.idle:
                     continue
 
-                new_interval = self.transform_dt_to_horizon(
+                new_interval = self.transform_interval_to_horizon(
                     ac.interval, new_horizon, horz_overlap
                 )
 
@@ -207,25 +201,25 @@ class Schedule:
         return new_schedule
 
 
-# def transform_test():
-#     ### Transformation test
-#     from mstk.test import sample_proj_folder
-#     from mstk.visualize.read_schedule import read_schedule
-#     from mstk.visualize.plot_schedule import PlotSchedule
+def transform_test():
+    ### Transformation test
+    from mstk.test import sample_proj_folder
+    from mstk.visualize.read_schedule import read_schedule
+    from mstk.visualize.plot_schedule import PlotSchedule
 
-#     test_schedule = read_schedule(sample_proj_folder)
-#     mc_id_list = test_schedule.mc_id_list[
-#         : int(len(test_schedule.mc_id_list) / 2)
-#     ]
-#     new_schedule = test_schedule.transform(
-#         f"copy of {test_schedule.schedule_id}",
-#         mc_id_list=mc_id_list,
-#         start=datetime(2020, 1, 2, 14),
-#         end=datetime(2020, 1, 4, 16),
-#         horz_overlap="trim",
-#     )
-#     plot_schedule = PlotSchedule(new_schedule)
-#     plot_schedule.draw_Gantt()
+    test_schedule = read_schedule(sample_proj_folder)
+    mc_id_list = test_schedule.mc_id_list[
+        : int(len(test_schedule.mc_id_list) / 2)
+    ]
+    new_schedule = test_schedule.transform(
+        f"copy of {test_schedule.schedule_id}",
+        # mc_id_list=mc_id_list,
+        start=datetime(2020, 1, 1, 14),
+        end=datetime(2020, 1, 2, 9),
+        horz_overlap="trim",
+    )
+    plot_schedule = PlotSchedule(new_schedule)
+    plot_schedule.draw_Gantt()
 
 
 def main():
@@ -244,5 +238,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
-    # transform_test()
+    # main()
+    transform_test()

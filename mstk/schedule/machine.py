@@ -28,8 +28,7 @@ class Machine:
         try:
             return self.__mc_schedule
         except:
-            raise 
-
+            raise
 
     def reset_schedule(self, horizon: Interval):
         self.__mc_schedule = MCSchedule(self.mc_id, horizon, self.ac_types)
@@ -251,8 +250,9 @@ class MCSchedule:
         """
         ac_id_list = self.ac_id_list_of_interval(given_interval)
         # if multiple Activities occupy given interval, return False
-        if len(ac_id_list) != 1:
+        if len(ac_id_list) > 1:
             return False
+
         ac_id = ac_id_list[0]
         target_ac_type = self.ac_dict[ac_id].ac_type
         return target_ac_type == self.idle_type
@@ -267,13 +267,28 @@ class MCSchedule:
             bool: True if addition of Activity was successful, False otherwise
         """
         _interval = ac.interval
+
+        if (_interval.duration().total_seconds() == 0) and (
+            _interval.end == self.horizon.end
+        ):
+            if ac.ac_type == self.idle_type:
+                raise ValueError(
+                    "An idle job with duration 0 is not allowed to insert"
+                )
+            self.ac_id_list += [ac.ac_id]
+            self.ac_dict[ac.ac_id] = ac
+            self.ac_counts[ac.ac_type] += 1
+            self.ac_cum_counts[ac.ac_type] += 1
+            # target_ac = self.ac_dict[self.ac_id_list[-1]]
+            print(f"Warning: {ac} has duration of 0")
+            return True
+
         if not self.is_idle_only(_interval):
             _str = f"Impossible add_activity request on machine {self.mc_id} "
             _str += f"with given interval {_interval} and type {ac.ac_type}"
             raise ValueError(
                 f"{_interval} is occupied in Machine {self.mc_id}"
             )
-
         target_ac_id = self.ac_id_list_of_interval(_interval)[0]
         target_ac = self.ac_dict[target_ac_id]
         target_ac_idx = self.ac_id_list.index(target_ac_id)
@@ -309,7 +324,8 @@ class MCSchedule:
         for added_ac in added_ac_list:
             self.ac_id_list.insert(target_ac_idx, added_ac.ac_id)
             self.ac_dict[added_ac.ac_id] = added_ac
-
+        if ac.interval.duration() == 0:
+            print(f"Warning: {ac} has duration of 0")
         return True
 
     def del_activities_in_interval(self, given_interval: Interval):

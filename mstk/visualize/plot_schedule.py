@@ -5,9 +5,10 @@ from mstk.visualize.color_map import Cmap
 
 import matplotlib
 from matplotlib import pyplot as plt
-from matplotlib.collections import PatchCollection
+from matplotlib.collections import PatchCollection, LineCollection
 import matplotlib.patches as patches
 import matplotlib.dates as mdates
+import matplotlib.lines as lines
 
 from natsort import natsorted
 
@@ -32,16 +33,17 @@ class PlotSchedule:
         self.ax_main.set_title(f"{self.schedule.schedule_id}")
         self.format_ax_main()
         self.cmap = Cmap()
-        self.ac_patch_list: List[str] = []
+
+        self.horz_line_list: List[lines.Line2D] = []
+        self.ac_patch_list: List[patches.Rectangle] = []
         self.ac_color_list: List[str] = []
 
-        if "legend_on" in kwargs:
-            self.legend_on = kwargs["legend_on"]
-        else:
-            self.legend_on = True
+        self.legend_on = kwargs["legend_on"] if "legend_on" in kwargs else True
+        self.horz_line_on = (
+            kwargs["horz_line_on"] if "horz_line_on" in kwargs else False
+        )
 
     # TODO: implement sorting options for machines and jobs
-    # TODO: Add option for drawing horizontal lines
     # TODO: implement: showing used mc / job only
 
     def format_ax_main(self):
@@ -87,6 +89,17 @@ class PlotSchedule:
         self.fig_legend.canvas.toolbar.pack_forget()
         self.fig_legend.tight_layout()
 
+    def draw_horz_line(self):
+        for target_mc_index, target_mc_id in enumerate(self.mc_id_list):
+            height = 1.1 * target_mc_index
+            self.horz_line_list += [
+                [(self.x_min, height), (self.x_max, height)]
+            ]
+        self.horz_line_collection = LineCollection(
+            self.horz_line_list, colors=["k"], linewidth=0.7
+        )
+        self.ax_main.add_collection(self.horz_line_collection)
+
     def draw_Gantt(self):
 
         # Draw activities
@@ -98,6 +111,7 @@ class PlotSchedule:
             target_mc_schedule = self.schedule.mc_dict[
                 target_mc_id
             ].mc_schedule
+
             for ac in target_mc_schedule.ac_iter():
                 if ac.ac_type == self.schedule.ac_types.idle:
                     continue
@@ -154,6 +168,8 @@ class PlotSchedule:
         self.fig.canvas.mpl_connect("button_press_event", on_patch_click)
         if self.legend_on == True:
             self.draw_legend()
+        if self.horz_line_on == True:
+            self.draw_horz_line()
         plt.show()
 
 
@@ -163,7 +179,7 @@ def main():
     from mstk.visualize.read_schedule import read_schedule
 
     test_schedule = read_schedule(sample_proj_folder)
-    plot_option = {"legend_on": False}
+    plot_option = {"legend_on": True, "horz_line_on": True}
     plt_schedule = PlotSchedule(test_schedule, **plot_option)
     plt_schedule.draw_Gantt()
     plt.show()

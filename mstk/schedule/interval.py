@@ -28,7 +28,7 @@ class Interval:
         """return (end - start) timedelta value"""
         return self.end - self.start
 
-    def range_tuple(self) -> Tuple[dt.datetime, dt.datetime]:
+    def dt_range(self) -> Tuple[dt.datetime, dt.datetime]:
         return (self.start, self.end)
 
     def __repr__(self) -> str:
@@ -61,11 +61,13 @@ class Interval:
                     max([self.start, other.start]), min([self.end, other.end])
                 )
             else:
-                print("No intersection exists")
-                return NotImplemented
+                # print("No intersection exists")
+                # return NotImplemented
+                return None
         else:
-            print("Input is not an interval instance")
-            return NotImplemented
+            # print("Input is not an interval instance")
+            # return NotImplemented
+            raise ValueError("Input is not an interval instance")
 
     def change_start_time(self, new_start_time):
         """Update the start time after check validity

@@ -124,6 +124,109 @@ class Schedule:
 
     # TODO: def add_setup_to_mc
 
+    def transform_dt_to_horizon(
+        self, interval: Interval, horizon: Interval, horz_overlap: str
+    ):
+        if horz_overlap in ["include"]:
+            raise NotImplementedError(
+                "horz_overlap option 'include' results in an inconsistent mc_schedule"
+            )
+            # if (horizon.in_closed_interval(interval.start)) or (
+            #     horizon.in_closed_interval(interval.end)
+            # ):
+            #     return Interval(*interval.dt_range())
+            # else:
+            #     return None
+
+        elif horz_overlap in ["exclude"]:
+            if (horizon.in_closed_interval(interval.start)) and (
+                horizon.in_closed_interval(interval.end)
+            ):
+                return Interval(*interval.dt_range())
+            else:
+                return None
+        elif horz_overlap in ["trim"]:
+            new_interval = horizon.intersect(interval)
+            return None if (new_interval == NotImplemented) else new_interval
+
+    def transform(
+        self,
+        schedule_id,
+        mc_id_list=None,
+        start=None,
+        end=None,
+        horz_overlap="trim",
+        **kwargs,
+    ):
+
+        mc_id_list = self.mc_id_list if (mc_id_list == None) else mc_id_list
+
+        start = self.horizon.start if (start == None) else start
+        end = self.horizon.end if (end == None) else end
+        new_horizon = Interval(start, end)
+        if not (self.horizon.in_closed_interval(start)) or not (
+            self.horizon.in_closed_interval(end)
+        ):
+            raise KeyError(f"The new horizon lies beyond the range")
+        # TODO: Detailed exception handling
+
+        # TODO: consider moving overlap_options to __init__.py
+        overlap_options = ["include", "exclude", "trim"]
+        if horz_overlap not in overlap_options:
+            raise ValueError(
+                f"horz_overlap {horz_overlap} is invalid -- try one of {overlap_options}"
+            )
+
+        new_schedule = Schedule(schedule_id, new_horizon, self.ac_types)
+
+        for job_id in self.job_id_list:
+            new_schedule.add_job(job_id)
+
+        for mc_id in mc_id_list:
+            new_mc = new_schedule.add_machine(mc_id)
+            old_mc = self.mc_dict[mc_id]
+            for ac in old_mc.ac_iter():
+                if ac.ac_type == self.ac_types.idle:
+                    continue
+
+                new_interval = self.transform_dt_to_horizon(
+                    ac.interval, new_horizon, horz_overlap
+                )
+
+                if new_interval != None:
+                    if ac.ac_type == self.ac_types.operation:
+                        job_id = ac.job.job_id
+                        new_schedule.add_operation(
+                            mc_id, job_id, *new_interval.dt_range()
+                        )
+                    elif ac.ac_type == self.ac_types.breakdown:
+                        new_schedule.add_breakdown(
+                            mc_id, *new_interval.dt_range()
+                        )
+
+        return new_schedule
+
+
+# def transform_test():
+#     ### Transformation test
+#     from mstk.test import sample_proj_folder
+#     from mstk.visualize.read_schedule import read_schedule
+#     from mstk.visualize.plot_schedule import PlotSchedule
+
+#     test_schedule = read_schedule(sample_proj_folder)
+#     mc_id_list = test_schedule.mc_id_list[
+#         : int(len(test_schedule.mc_id_list) / 2)
+#     ]
+#     new_schedule = test_schedule.transform(
+#         f"copy of {test_schedule.schedule_id}",
+#         mc_id_list=mc_id_list,
+#         start=datetime(2020, 1, 2, 14),
+#         end=datetime(2020, 1, 4, 16),
+#         horz_overlap="trim",
+#     )
+#     plot_schedule = PlotSchedule(new_schedule)
+#     plot_schedule.draw_Gantt()
+
 
 def main():
 
@@ -142,3 +245,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    # transform_test()

@@ -40,9 +40,9 @@ class PlotSchedule:
         else:
             self.legend_on = True
 
-    # TODO: implement sorting options for machines
+    # TODO: implement sorting options for machines and jobs
     # TODO: Add option for drawing horizontal lines
-    # TODO: Add legends option
+    # TODO: implement: showing used mc / job only
 
     def format_ax_main(self):
         # set limits in ax_main

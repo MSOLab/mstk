@@ -71,6 +71,10 @@ class Activity:
         """
         self.contents[key] = value
 
+    # @property
+    def dt_range(self):
+        return self.interval.dt_range()
+
 
 class Breakdown(Activity):
     def __init__(
@@ -93,6 +97,10 @@ class Breakdown(Activity):
 
     def __repr__(self) -> str:
         return f"Breakdown {self.ac_id}: {self.interval}"
+
+    # def transform_to_new_mc(self, mc, job):
+    #     copy_interval = Interval(self.interval.dt_range)
+    #     return Operation(self.ac_id, self.ac_type, mc, job, copy_interval)
 
 
 class Operation(Activity):
@@ -118,6 +126,10 @@ class Operation(Activity):
     @property
     def ac_id(self):
         return self.__ac_id
+
+    # def transform_to_new_mc(self, mc, job):
+    #     copy_interval = Interval(self.interval.dt_range)
+    #     return Operation(self.ac_id, self.ac_type, mc, job, copy_interval)
 
 
 def main():

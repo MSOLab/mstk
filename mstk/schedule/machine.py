@@ -23,15 +23,23 @@ class Machine:
         self.contents = {}
         # TODO fill the contents in
 
+    @property
+    def mc_schedule(self):
+        try:
+            return self.__mc_schedule
+        except:
+            raise 
+
+
     def reset_schedule(self, horizon: Interval):
-        self.mc_schedule = MCSchedule(self.mc_id, horizon, self.ac_types)
+        self.__mc_schedule = MCSchedule(self.mc_id, horizon, self.ac_types)
 
     def ac_iter(self) -> Iterator[Activity]:
         """
         Yields:
             Iterator[Activity]
         """
-        return self.mc_schedule.ac_iter()
+        return self.__mc_schedule.ac_iter()
 
     def add_contents(self, key: str, value: Any):
         """adds additional contents to Machine

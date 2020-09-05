@@ -231,12 +231,14 @@ def main():
 
     test_schedule = read_schedule(sample_proj_folder)
 
-    for mc_sched in test_schedule.mc_iter():
-        print(mc_sched.mc_id)
-        for ac in mc_sched.ac_iter():
-            print(ac)
+    for mc in test_schedule.mc_iter():
+        print(mc.mc_id)
+        # for ac in mc_sched.ac_iter():
+        #     print(ac)
+        for operation in mc.operation_iter():
+            print(operation)
 
 
 if __name__ == "__main__":
-    # main()
-    transform_test()
+    main()
+    # transform_test()

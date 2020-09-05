@@ -9,7 +9,7 @@ from typing import List, Dict, Tuple, Any, Iterator
 # defined packages
 from mstk.schedule import to_dt
 from mstk.schedule.interval import Interval
-from mstk.schedule.activity import Activity
+from mstk.schedule.activity import Activity, Operation
 from mstk.schedule.ac_types import AcTypes
 
 
@@ -40,6 +40,13 @@ class Machine:
         """
         return self.__mc_schedule.ac_iter()
 
+    def operation_iter(self) -> Iterator[Operation]:
+        """
+        Yields:
+            Iterator[Operation]
+        """
+        return self.__mc_schedule.operation_iter()
+
     def add_contents(self, key: str, value: Any):
         """adds additional contents to Machine
 
@@ -59,6 +66,7 @@ class MCSchedule:
         self.idle_type = ac_types.idle
         self.ac_id_list: List[str] = list()
         self.ac_dict: Dict[str, Activity] = dict()
+        self.ac_types = ac_types
         # count of Activities by type: +1 when add_activity, -1 when delete_ac_id
         self.ac_counts = {ac_type: 0 for ac_type in ac_types.all_types}
         self.ac_cum_counts = {ac_type: 0 for ac_type in ac_types.all_types}
@@ -99,6 +107,16 @@ class MCSchedule:
         """
         for ac_id in self.ac_id_list:
             yield self.ac_dict[ac_id]
+
+    def operation_iter(self) -> Iterator[Operation]:
+        """
+        Yields:
+            Iterator[Opearation]
+        """
+        for ac_id in self.ac_id_list:
+            ac = self.ac_dict[ac_id]
+            if ac.ac_type == self.ac_types.operation:
+                yield ac
 
     def hbar_tuple_list(self) -> List[Tuple[dt.datetime, dt.timedelta]]:
         """horizontal bar tuple list for Gantt chart making
@@ -227,7 +245,7 @@ class MCSchedule:
             err_str += f"{self.horizon} of MCSchedule of machine {self.mc_id}"
             raise ValueError(err_str)
 
-    # TODO: return object, not id
+    # TODO: use iterator
     # TODO: provide options for operations that overlays a boundary value
     def ac_id_list_of_interval(self, given_interval: Interval) -> List[str]:
         self.error_if_interval_outside_horizon(given_interval)
@@ -488,8 +506,11 @@ def main():
     mc_schedule_1.add_activity(ac_setup_1)
     mc_schedule_1.add_activity(ac_breakdown_1)
 
-    for ac in mc_schedule_1.ac_iter():
-        print(ac)
+    for operation in mc_schedule_1.operation_iter():
+        print(operation)
+
+    # for ac in mc_schedule_1.ac_iter():
+    #     print(ac)
 
     # delete activity test
     print("\ntest ops 1 deleted")

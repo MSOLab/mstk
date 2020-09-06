@@ -1,12 +1,12 @@
 {
     "schedule_name": "sample_schedule",
     "file_info": {
+        "ac_types_info": "ac_types.json",
         "activity_info": "activity_info.csv",
         "machine_info": "machine_info.csv",
         "job_info": "job_info.csv"
     },
     "horizon": {
-        "option": "manual",
         "start": "1/1/2020 00:00",
         "end": "1/6/2020 00:00"
     },

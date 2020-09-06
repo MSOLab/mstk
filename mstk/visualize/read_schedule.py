@@ -32,9 +32,9 @@ def read_schedule(proj_folder: str):
     ###
     ### Add machines
     ###
-
+    mc_info_fname = input_dict["file_info"]["machine_info"]
     with open(
-        proj_folder + "\\machine_info.csv", "r", encoding="utf-8"
+        proj_folder + "\\" + mc_info_fname, "r", encoding="utf-8"
     ) as file_data:
         mc_info_dict = csv.DictReader(file_data)
         for item in mc_info_dict:
@@ -44,9 +44,9 @@ def read_schedule(proj_folder: str):
     ###
     ### Add jobs
     ###
-
+    job_info_fname = input_dict["file_info"]["job_info"]
     with open(
-        proj_folder + "\\job_info.csv", "r", encoding="utf-8"
+        proj_folder + "\\" + job_info_fname, "r", encoding="utf-8"
     ) as file_data:
         job_info_dict = csv.DictReader(file_data)
         for item in job_info_dict:
@@ -57,9 +57,10 @@ def read_schedule(proj_folder: str):
     ###
     ### Add activities
     ###
+    ac_info_fname = input_dict["file_info"]["activity_info"]
     core_entity_list = ["mc_id", "ac_type", "job_id", "start", "end"]
     with open(
-        proj_folder + "\\activity_info.csv", "r", encoding="utf-8"
+        proj_folder + "\\" + ac_info_fname, "r", encoding="utf-8"
     ) as file_data:
         ac_info_dict = csv.DictReader(file_data)
         for item in ac_info_dict:

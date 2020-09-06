@@ -10,7 +10,7 @@ import matplotlib.patches as patches
 import matplotlib.dates as mdates
 import matplotlib.lines as lines
 
-from natsort import natsorted
+# from natsort import natsorted
 
 # matplotlib.use("Qt5Agg")
 
@@ -22,9 +22,11 @@ class PlotSchedule:
 
     def __init__(self, schedule: Schedule, **kwargs):
         self.schedule = schedule
-        self.mc_id_list = natsorted(schedule.mc_id_list)
+        # self.mc_id_list = natsorted(schedule.mc_id_list)
+        self.mc_id_list = schedule.mc_id_list
         self.mc_id_list.reverse()
-        self.job_id_list = natsorted(schedule.job_id_list)
+        # self.job_id_list = natsorted(schedule.job_id_list)
+        self.job_id_list = schedule.job_id_list
 
         self.fig = plt.figure(
             figsize=(20, len(self.schedule.mc_id_list) * 0.4)
@@ -86,7 +88,7 @@ class PlotSchedule:
         # self.ax_legend.add_collection(self.legend_patch_collection)
         self.ax_legend.legend(ncol=ncol, loc="upper left")
         self.ax_legend.axis("off")
-        self.fig_legend.canvas.toolbar.pack_forget()
+        # self.fig_legend.canvas.toolbar.pack_forget()
         self.fig_legend.tight_layout()
 
     def draw_horz_line(self):

@@ -22,10 +22,8 @@ class PlotSchedule:
 
     def __init__(self, schedule: Schedule, **kwargs):
         self.schedule = schedule
-        # self.mc_id_list = natsorted(schedule.mc_id_list)
         self.mc_id_list = schedule.mc_id_list
         self.mc_id_list.reverse()
-        # self.job_id_list = natsorted(schedule.job_id_list)
         self.job_id_list = schedule.job_id_list
 
         self.fig = plt.figure(
@@ -37,7 +35,8 @@ class PlotSchedule:
         self.cmap = Cmap()
 
         self.horz_line_list: List[lines.Line2D] = []
-        self.ac_patch_list: List[patches.Rectangle] = []
+        self.operation_patch_list: List[patches.Rectangle] = []
+        self.breakdown_patch_list: List[patches.Rectangle] = []
         self.ac_color_list: List[str] = []
 
         self.legend_on = kwargs["legend_on"] if "legend_on" in kwargs else True
@@ -82,13 +81,9 @@ class PlotSchedule:
             )
             self.legend_patch_list += [legend_patch]
             self.ax_legend.add_patch(legend_patch)
-        # self.legend_patch_collection = PatchCollection(
-        #     self.legend_patch_list, match_original=True
-        # )
-        # self.ax_legend.add_collection(self.legend_patch_collection)
+
         self.ax_legend.legend(ncol=ncol, loc="upper left")
         self.ax_legend.axis("off")
-        # self.fig_legend.canvas.toolbar.pack_forget()
         self.fig_legend.tight_layout()
 
     def draw_horz_line(self):
@@ -102,70 +97,128 @@ class PlotSchedule:
         )
         self.ax_main.add_collection(self.horz_line_collection)
 
-    def draw_Gantt(self):
+    def generate_overlay_schedule(self, overlay_schedule: Schedule):
+        overlay_patch_list: List[patches] = []
+
+        def patch_generator(overlay_schedule):
+            for mc_id, mc in overlay_schedule.mc_dict.items():
+                if mc_id not in self.mc_id_list:
+                    continue
+                target_mc_index = self.mc_id_list.index(mc_id)
+                for ac in mc.actual_ac_iter():
+                    new_interval = self.schedule.transform_interval_to_horizon(
+                        ac.interval, self.schedule.horizon, "trim"
+                    )
+                    if new_interval == None:
+                        continue
+                    start = mdates.date2num(new_interval.start)
+                    end = mdates.date2num(new_interval.end)
+                    proc = end - start
+                    ac_patch = patches.Rectangle(
+                        (start, 1.1 * target_mc_index),
+                        proc,
+                        1,
+                        facecolor="k",
+                        edgecolor="r",
+                        alpha=0.3,
+                        linewidth=2,
+                    )
+                    yield ac_patch
+
+        overlay_patch_list += [
+            patch for patch in patch_generator(overlay_schedule)
+        ]
+
+        # overlay_schedule.transform_interval_to_horizon()
+        return PatchCollection(
+            overlay_patch_list, match_original=True, hatch="///"
+        )
+
+    def draw_Gantt(self, **kwargs):
 
         # Draw activities
 
         # TODO: change colors according to the properties
         job_list = self.schedule.job_id_list
         for target_mc_index, target_mc_id in enumerate(self.mc_id_list):
-            # target_mc_index = self.mc_id_list.index(target_mc_id)
             target_mc_schedule = self.schedule.mc_dict[
                 target_mc_id
             ].mc_schedule
 
-            for ac in target_mc_schedule.ac_iter():
-                if ac.ac_type == self.schedule.ac_types.idle:
-                    continue
+            for ac in target_mc_schedule.actual_ac_iter():
 
                 start = mdates.date2num(ac.interval.start)
                 end = mdates.date2num(ac.interval.end)
                 proc = end - start
 
-                # (face_color, font_color) = self.cmap.material_cmap(color_id)
-                alpha_value = 1
-                edge_color = None
-                linestyle = None
-                # linewidth = None
+                alpha_value = (
+                    1  # if ("overlay_schedule" not in kwargs) else 0.5
+                )
+
                 if ac.ac_type == self.schedule.ac_types.operation:
                     job_id = job_list.index(ac.job.job_id)
                     face_color = self.cmap.material_cmap(job_id)[0]
-                if ac.ac_type == self.schedule.ac_types.idle:
-                    face_color = "k"
-                    alpha_value = 0.1
+                    ac_patch = patches.Rectangle(
+                        (start, 1.1 * target_mc_index),
+                        proc,
+                        1,
+                        facecolor=face_color,
+                        alpha=alpha_value,
+                    )
+                    self.operation_patch_list += [ac_patch]
+
                 if ac.ac_type == self.schedule.ac_types.breakdown:
                     face_color = "#ffebee"
                     edge_color = "k"
                     linestyle = "--"
 
-                ac_patch = patches.Rectangle(
-                    (start, 1.1 * target_mc_index),
-                    proc,
-                    1,
-                    facecolor=face_color,
-                    alpha=alpha_value,
-                    edgecolor=edge_color,
-                    linestyle=linestyle,
-                )
+                    ac_patch = patches.Rectangle(
+                        (start, 1.1 * target_mc_index),
+                        proc,
+                        1,
+                        facecolor=face_color,
+                        alpha=alpha_value,
+                        edgecolor=edge_color,
+                        linestyle=linestyle,
+                    )
+                    self.breakdown_patch_list += [ac_patch]
 
                 ac_patch.ac = ac
 
-                self.ac_patch_list += [ac_patch]
                 # self.ax_main.add_patch(ac_patch)
 
         ### PatchCollection for efficient rendering
-        self.patch_collection = PatchCollection(
-            self.ac_patch_list, match_original=True
+        self.operation_patch_collection = PatchCollection(
+            self.operation_patch_list, match_original=True
         )
-        self.ax_main.add_collection(self.patch_collection)
+        self.ax_main.add_collection(self.operation_patch_collection)
+
+        self.breakdown_patch_collection = PatchCollection(
+            self.breakdown_patch_list, match_original=True, hatch="\\\\\\"
+        )
+        self.ax_main.add_collection(self.breakdown_patch_collection)
+
+        if "overlay_schedule" in kwargs:
+            overlay_schedule = kwargs["overlay_schedule"]
+            self.ax_main.add_collection(
+                self.generate_overlay_schedule(overlay_schedule)
+            )
 
         def on_patch_click(event):
 
-            cont, ind = self.patch_collection.contains(event)
+            cont, ind = self.operation_patch_collection.contains(event)
             if cont:
                 index = ind["ind"][0]
                 # TODO: implement print function for each activity type
-                print(self.ac_patch_list[index].ac.job.job_id)
+                print(self.operation_patch_list[index].ac.job.job_id)
+                return
+
+            cont, ind = self.breakdown_patch_collection.contains(event)
+            if cont:
+                index = ind["ind"][0]
+                # TODO: implement print function for each activity type
+                print("breakdown")
+                return
 
         self.fig.canvas.mpl_connect("button_press_event", on_patch_click)
         if self.legend_on == True:
@@ -176,14 +229,22 @@ class PlotSchedule:
 
 
 def main():
-
+    from datetime import datetime
     from mstk.test import sample_proj_folder
     from mstk.visualize.read_schedule import read_schedule
 
     test_schedule = read_schedule(sample_proj_folder)
-    plot_option = {"legend_on": True, "horz_line_on": True}
+    new_schedule = test_schedule.transform(
+        f"copy of {test_schedule.schedule_id}",
+        # mc_id_list=mc_id_list,
+        start=datetime(2020, 1, 1, 14),
+        end=datetime(2020, 1, 3, 11),
+        horz_overlap="trim",
+    )
+    plot_option = {"legend_on": False, "horz_line_on": False}
     plt_schedule = PlotSchedule(test_schedule, **plot_option)
-    plt_schedule.draw_Gantt()
+    # plt_schedule.draw_Gantt()
+    plt_schedule.draw_Gantt(overlay_schedule=new_schedule)
     plt.show()
 
 

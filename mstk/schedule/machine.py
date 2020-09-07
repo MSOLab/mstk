@@ -4,12 +4,12 @@ Created at 10th Aug. 2020
 # common Python packages
 import math
 import datetime as dt
-from typing import List, Dict, Tuple, Any, Iterator
+from typing import List, Dict, Tuple, Any, Iterator, Union
 
 # defined packages
 from mstk.schedule import to_dt
 from mstk.schedule.interval import Interval
-from mstk.schedule.activity import Activity, Operation
+from mstk.schedule.activity import Activity, Operation, Breakdown
 from mstk.schedule.ac_types import AcTypes
 
 
@@ -46,6 +46,13 @@ class Machine:
             Iterator[Operation]
         """
         return self.__mc_schedule.operation_iter()
+
+    def actual_ac_iter(self) -> Iterator[Union[Operation, Breakdown]]:
+        """
+        Yields:
+            Iterator[Union[Operation, Breakdown]]
+        """
+        return self.__mc_schedule.actual_ac_iter()
 
     def add_contents(self, key: str, value: Any):
         """adds additional contents to Machine
@@ -116,6 +123,18 @@ class MCSchedule:
         for ac_id in self.ac_id_list:
             ac = self.ac_dict[ac_id]
             if ac.ac_type == self.ac_types.operation:
+                yield ac
+
+    def actual_ac_iter(self) -> Iterator[Union[Operation, Breakdown]]:
+        """
+        Yields:
+            Iterator[Opearation, Breakdown]
+        """
+        for ac_id in self.ac_id_list:
+            ac = self.ac_dict[ac_id]
+            if ac.ac_type == self.ac_types.idle:
+                continue
+            else:
                 yield ac
 
     def hbar_tuple_list(self) -> List[Tuple[dt.datetime, dt.timedelta]]:
@@ -506,8 +525,10 @@ def main():
     mc_schedule_1.add_activity(ac_setup_1)
     mc_schedule_1.add_activity(ac_breakdown_1)
 
-    for operation in mc_schedule_1.operation_iter():
-        print(operation)
+    print("iter begins")
+    for ac in mc_schedule_1.actual_ac_iter():
+        print(ac)
+    print("iter ends")
 
     # for ac in mc_schedule_1.ac_iter():
     #     print(ac)

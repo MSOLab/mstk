@@ -178,7 +178,11 @@ class Schedule:
 
         for mc_id in mc_id_list:
             new_mc = new_schedule.add_machine(mc_id)
-            old_mc = self.mc_dict[mc_id]
+            try:
+                old_mc = self.mc_dict[mc_id]
+            except:
+                print(f"Warning: Machine {mc_id} is not in schedule {self.schedule_id} (ignored)")
+                continue
             for ac in old_mc.ac_iter():
                 if ac.ac_type == self.ac_types.idle:
                     continue

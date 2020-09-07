@@ -26,12 +26,6 @@ class PlotSchedule:
         self.mc_id_list.reverse()
         self.job_id_list = schedule.job_id_list
 
-        self.fig = plt.figure(
-            figsize=(20, len(self.schedule.mc_id_list) * 0.4)
-        )
-        self.ax_main = self.fig.add_subplot()
-        self.ax_main.set_title(f"{self.schedule.schedule_id}")
-        self.format_ax_main()
         self.cmap = Cmap()
 
         self.horz_line_list: List[lines.Line2D] = []
@@ -46,6 +40,20 @@ class PlotSchedule:
 
     # TODO: implement sorting options for machines and jobs
     # TODO: implement: showing used mc / job only
+
+    def reset_figure(self):
+        self.fig = plt.figure(
+            figsize=(20, len(self.schedule.mc_id_list) * 0.4)
+        )
+        self.ax_main = self.fig.add_subplot()
+        self.ax_main.set_title(f"{self.schedule.schedule_id}")
+
+        self.format_ax_main()
+
+        self.horz_line_list = []
+        self.operation_patch_list = []
+        self.breakdown_patch_list = []
+        self.ac_color_list = []
 
     def format_ax_main(self):
         # set limits in ax_main
@@ -129,7 +137,6 @@ class PlotSchedule:
             patch for patch in patch_generator(overlay_schedule)
         ]
 
-        # overlay_schedule.transform_interval_to_horizon()
         return PatchCollection(
             overlay_patch_list, match_original=True, hatch="///"
         )
@@ -139,6 +146,9 @@ class PlotSchedule:
         # Draw activities
 
         # TODO: change colors according to the properties
+
+        self.reset_figure()
+
         job_list = self.schedule.job_id_list
         for target_mc_index, target_mc_id in enumerate(self.mc_id_list):
             target_mc_schedule = self.schedule.mc_dict[
@@ -244,6 +254,8 @@ def main():
     plot_option = {"legend_on": False, "horz_line_on": False}
     plt_schedule = PlotSchedule(test_schedule, **plot_option)
     # plt_schedule.draw_Gantt()
+    plt_schedule.draw_Gantt(overlay_schedule=new_schedule)
+    plt_schedule.draw_Gantt(overlay_schedule=new_schedule)
     plt_schedule.draw_Gantt(overlay_schedule=new_schedule)
     plt.show()
 

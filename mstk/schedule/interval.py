@@ -1,6 +1,8 @@
 """ Interval by datetime class definition
 Created at 8th Aug. 2020
 """
+from __future__ import annotations
+
 # common Python packages
 import datetime as dt
 from typing import Tuple
@@ -18,9 +20,9 @@ class Interval:
     start: dt.datetime
     end: dt.datetime
 
-    def __init__(self, start, end):
+    def __init__(self, start: dt.datetime, end: dt.datetime):
         if start > end:
-            raise ValueError("Interval start after end!")
+            raise ValueError("Interval start after end")
         self.start = to_dt.to_dt_datetime(start)
         self.end = to_dt.to_dt_datetime(end)
 
@@ -44,7 +46,7 @@ class Interval:
         else:
             return False
 
-    def is_distinct(self, other) -> bool:
+    def is_distinct(self, other: "Interval") -> bool:
         if isinstance(other, Interval):
             if self.end <= other.start or other.end <= self.start:
                 return True
@@ -54,22 +56,18 @@ class Interval:
             print("Input is not an interval instance")
             raise NotImplementedError
 
-    def intersect(self, other):
+    def intersect(self, other: "Interval"):
         if isinstance(other, Interval):
             if not self.is_distinct(other):
                 return Interval(
                     max([self.start, other.start]), min([self.end, other.end])
                 )
             else:
-                # print("No intersection exists")
-                # return NotImplemented
                 return None
         else:
-            # print("Input is not an interval instance")
-            # return NotImplemented
             raise ValueError("Input is not an interval instance")
 
-    def change_start_time(self, new_start_time):
+    def change_start_time(self, new_start_time: dt.datetime):
         """Update the start time after check validity
 
         Args:
@@ -87,7 +85,7 @@ class Interval:
         else:
             self.start = dt_new_start_time
 
-    def change_end_time(self, new_end_time):
+    def change_end_time(self, new_end_time: dt.datetime):
         """Update the end time after check validity
 
         Args:
@@ -108,13 +106,9 @@ class Interval:
 
 def main():
     interval1 = Interval(2, 10)
-    print(
-        "Example interval1:", interval1, "with duration", interval1.duration()
-    )
+    print("interval1:", interval1, "with duration", interval1.duration())
     interval2 = Interval(9, 11)
-    print(
-        "Example interval2:", interval2, "with duration", interval2.duration()
-    )
+    print("interval2:", interval2, "with duration", interval2.duration())
     print("Is distinct?:", interval1.is_distinct(interval2))
     print(
         "Intersection of two interval1 & interval2:",

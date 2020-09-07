@@ -1,14 +1,21 @@
 """activity type definition class
 Created at 10th Aug. 2020
 """
+
 import json
 from typing import List
 import os
-
 current_path = os.path.dirname(os.path.abspath(__file__))
 
 
-class AcTypes:
+class AcTypesParam:
+    """A container class for activity types
+
+    Default types: [idle, operation, setup, breakdown]
+
+    Each type contains a prefix(str) used in naming activities
+    """
+
     idle: str
     operation: str
     setup: str
@@ -16,11 +23,8 @@ class AcTypes:
 
     def __init__(
         self,
-        encoding: str,
-        setup_exists: bool,
-        breakdown_exists: bool,
-        filename=f"{current_path}/ac_type_options/default.json",
-        # TODO: use **kwargs to change ac_type json file location according to setup / brkdown
+        encoding: str = "utf-8",
+        filename: str = f"{current_path}/default.json",
     ):
         self.all_types: List[str] = list()
         with open(filename, encoding=encoding) as file_data:
@@ -30,12 +34,6 @@ class AcTypes:
                     continue
                 self.all_types.append(value)
                 self.__dict__[key] = value
-        if not setup_exists:
-            self.all_types.remove("setup")
-            del self.__dict__["setup"]
-        if not breakdown_exists:
-            self.all_types.remove("breakdown")
-            del self.__dict__["breakdown"]
         if "idle" not in self.__dict__:
             raise ValueError("Type 'idle' and its display prefix should exist")
 
@@ -61,8 +59,8 @@ class AcTypes:
 
 
 def main():
-
-    ac_types = AcTypes("utf-8", True, True)
+    ac_types = AcTypesParam()
+    print("Finished")
 
 
 if __name__ == "__main__":

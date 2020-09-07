@@ -8,7 +8,7 @@ __all__ = [
     "Cmap",
 ]
 
-from .schedule.ac_types import AcTypes
+from .schedule.ac_types import AcTypesParam
 from .schedule.interval import Interval
 from .schedule.activity import Activity, Operation
 from .schedule.machine import Machine

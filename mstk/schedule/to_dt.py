@@ -1,11 +1,12 @@
 """moment to datetime.datetime function
 Created at 10th Aug. 2020
 """
+from typing import Union
 import datetime as dt
 
 
-def to_dt_datetime(moment) -> dt.datetime:
-    """if moment is not datetime.datetime, convert to datetime.datetime
+def to_dt_datetime(moment: Union[int, dt.datetime]) -> dt.datetime:
+    """if moment is an integer, convert to datetime.datetime
 
     Args:
         moment ([type]): datetime.datetime instance or numeric

@@ -9,19 +9,23 @@ from typing import List, Dict, Tuple, Any, Iterator, Union
 # defined packages
 from mstk.schedule import to_dt
 from mstk.schedule.interval import Interval
-from mstk.schedule.activity import Activity, Operation, Breakdown
-from mstk.schedule.ac_types import AcTypes
+from mstk.schedule.activity import Activity, Idle, Operation, Breakdown
+from mstk.schedule.ac_types import AcTypesParam
 
 
 class Machine:
-    mc_id: str
-    contents: Dict[str, Any]
+    __slots__ = ["__mc_id", "__contents", "__mc_schedule"]
 
-    def __init__(self, mc_id, ac_types):
-        self.mc_id: str = mc_id
-        self.ac_types = ac_types
-        self.contents = {}
-        # TODO fill the contents in
+    def __init__(
+        self,
+        mc_id: str,
+    ):
+        self.__mc_id: str = mc_id
+        self.__contents: Dict[str, Any] = {}
+
+    @property
+    def mc_id(self):
+        return self.__mc_id
 
     @property
     def mc_schedule(self):
@@ -30,8 +34,10 @@ class Machine:
         except:
             raise
 
-    def reset_schedule(self, horizon: Interval):
-        self.__mc_schedule = MCSchedule(self.mc_id, horizon, self.ac_types)
+    def reset_schedule(self, horizon: Interval, ac_types_param):
+        self.__mc_schedule = MCSchedule(
+            self.mc_id, self, horizon, ac_types_param
+        )
 
     def ac_iter(self) -> Iterator[Activity]:
         """
@@ -61,37 +67,93 @@ class Machine:
             key (str): [description]
             value (Any): [description]
         """
-        self.contents[key] = value
+        self.__contents[key] = value
 
 
 class MCSchedule:
-    """A schedule of a machine in datetime format"""
+    """A schedule consists of activities on a machine"""
 
-    def __init__(self, mc_id: str, horizon: Interval, ac_types: AcTypes):
+    def __init__(
+        self,
+        mc_id: str,
+        mc: Machine,
+        horizon: Interval,
+        ac_types_param: AcTypesParam,
+    ):
         self.__mc_id: str = mc_id
-        self.horizon: Interval = horizon
-        self.idle_type = ac_types.idle
-        self.ac_id_list: List[str] = list()
-        self.ac_dict: Dict[str, Activity] = dict()
-        self.ac_types = ac_types
-        # count of Activities by type: +1 when add_activity, -1 when delete_ac_id
-        self.ac_counts = {ac_type: 0 for ac_type in ac_types.all_types}
-        self.ac_cum_counts = {ac_type: 0 for ac_type in ac_types.all_types}
+        self.__mc: Machine = mc
+        self.__horizon: Interval = horizon
+        self.__ac_id_list: List[str] = list()
+        self.__ac_dict: Dict[str, Activity] = dict()
+        self.__ac_types_param = ac_types_param
+
+        # count of activities for each type:
+        self.__ac_counts: Dict[str, int] = {
+            ac_type: 0 for ac_type in ac_types_param.all_types
+        }
+        # cumulativly count activities to make a unique identifier
+        self.__ac_cum_counts: Dict[str, int] = {
+            ac_type: 0 for ac_type in ac_types_param.all_types
+        }
 
         self.initialize_idle()
 
     @property
-    def mc_id(self):
+    def mc_id(self) -> str:
         return self.__mc_id
 
+    @property
+    def mc(self) -> Machine:
+        return self.__mc
+
+    @property
+    def horizon(self) -> Interval:
+        return self.__horizon
+
+    @property
+    def ac_id_list(self) -> List[str]:
+        return self.__ac_id_list
+
+    @property
+    def ac_dict(self) -> Dict[str, Activity]:
+        return self.__ac_dict
+
+    @property
+    def ac_types_param(self) -> AcTypesParam:
+        return self.__ac_types_param
+
+    @property
+    def ac_counts(self) -> Dict[str, int]:
+        return self.__ac_counts
+
+    @property
+    def ac_cum_counts(self) -> Dict[str, int]:
+        return self.__ac_cum_counts
+
     def initialize_idle(self):
-        """Initialize MCSchedule's first idle Activity instance"""
-        idle_id = self.make_ac_id_for_type(self.idle_type)
-        initial_idle = Activity(idle_id, self.idle_type, self.horizon)
-        self.ac_dict[initial_idle.ac_id] = initial_idle
-        self.ac_id_list += [initial_idle.ac_id]
-        self.ac_counts[self.idle_type] = 1
-        self.ac_cum_counts[self.idle_type] = 1
+        """Initialize MCSchedule with an idle activity"""
+        self.__ac_id_list = []
+        self.__ac_dict = {}
+        idle_type = self.ac_types_param.idle
+        idle_id = self.make_ac_id_for_type(idle_type)
+        initial_idle = Idle(
+            ac_id=idle_id,
+            interval=self.horizon,
+            mc=self.mc,
+            ac_types_param=self.ac_types_param,
+        )
+
+        self.ac_dict[idle_id] = initial_idle
+        self.ac_id_list.append(idle_id)
+
+        self.__ac_counts = {
+            ac_type: 0 for ac_type in self.ac_types_param.all_types
+        }
+        self.__ac_cum_counts = {
+            ac_type: 0 for ac_type in self.ac_types_param.all_types
+        }
+        self.ac_counts[self.ac_types_param.idle] = 1
+        self.ac_cum_counts[self.ac_types_param.idle] = 1
 
     def make_ac_id_for_type(self, ac_type: str) -> str:
         """Make ac_id with postfix starting with number 1
@@ -102,9 +164,7 @@ class MCSchedule:
         Returns:
             str: new ac_id
         """
-        return_string = (
-            f"{ac_type}({self.mc_id}-{self.ac_cum_counts[ac_type]})"
-        )
+        return_string = f"{ac_type}-{self.mc_id}-{self.ac_cum_counts[ac_type]}"
         return return_string
 
     def ac_iter(self) -> Iterator[Activity]:
@@ -122,17 +182,17 @@ class MCSchedule:
         """
         for ac_id in self.ac_id_list:
             ac = self.ac_dict[ac_id]
-            if ac.ac_type == self.ac_types.operation:
+            if ac.ac_type == self.ac_types_param.operation:
                 yield ac
 
     def actual_ac_iter(self) -> Iterator[Union[Operation, Breakdown]]:
         """
         Yields:
-            Iterator[Opearation, Breakdown]
+            Iterator[Opearation, Breakdown, Activity]
         """
         for ac_id in self.ac_id_list:
             ac = self.ac_dict[ac_id]
-            if ac.ac_type == self.ac_types.idle:
+            if ac.ac_type == self.ac_types_param.idle:
                 continue
             else:
                 yield ac
@@ -252,6 +312,14 @@ class MCSchedule:
             self.ac_id_list.pop()
 
     def in_horizon_interval(self, given_interval: Interval) -> bool:
+        """
+
+        Args:
+            given_interval (Interval): an interval to be checked
+
+        Returns:
+            bool: True if the given interval conforms to the horizon
+        """
         if self.before_horizon_start(given_interval.start):
             return False
         if self.after_horizon_end(given_interval.end):
@@ -259,14 +327,27 @@ class MCSchedule:
         return True
 
     def error_if_interval_outside_horizon(self, given_interval: Interval):
+        """
+
+        Args:
+            given_interval (Interval): an interval to be checked
+
+        Raises:
+            ValueError: the given interval does not conform to the horizon
+        """
         if not self.in_horizon_interval(given_interval):
             err_str = f"Given interval {given_interval} not in horizon "
             err_str += f"{self.horizon} of MCSchedule of machine {self.mc_id}"
             raise ValueError(err_str)
 
-    # TODO: use iterator
-    # TODO: provide options for operations that overlays a boundary value
     def ac_id_list_of_interval(self, given_interval: Interval) -> List[str]:
+        """
+        Args:
+            given_interval (Interval): An interval to be examined
+
+        Returns:
+            List[str]:
+        """
         self.error_if_interval_outside_horizon(given_interval)
         return_list: List[str] = list()
         for ac in self.ac_iter():
@@ -292,7 +373,7 @@ class MCSchedule:
 
         ac_id = ac_id_list[0]
         target_ac_type = self.ac_dict[ac_id].ac_type
-        return target_ac_type == self.idle_type
+        return target_ac_type == self.ac_types_param.idle
 
     def add_activity(self, ac: Activity) -> bool:
         """Try adding given Activity instance with given interval
@@ -308,11 +389,11 @@ class MCSchedule:
         if (_interval.duration().total_seconds() == 0) and (
             _interval.end == self.horizon.end
         ):
-            if ac.ac_type == self.idle_type:
+            if ac.ac_type == self.ac_types_param.idle:
                 raise ValueError(
                     "An idle job with duration 0 is not allowed to insert"
                 )
-            self.ac_id_list += [ac.ac_id]
+            self.ac_id_list.append(ac.ac_id)
             self.ac_dict[ac.ac_id] = ac
             self.ac_counts[ac.ac_type] += 1
             self.ac_cum_counts[ac.ac_type] += 1
@@ -326,21 +407,26 @@ class MCSchedule:
             raise ValueError(
                 f"{_interval} is occupied in Machine {self.mc_id}"
             )
+        # Only one activity (idle) is on the target interval
         target_ac_id = self.ac_id_list_of_interval(_interval)[0]
         target_ac = self.ac_dict[target_ac_id]
         target_ac_idx = self.ac_id_list.index(target_ac_id)
 
-        added_ac_list: List[Activity] = list()
+        idle_type = self.ac_types_param.idle
 
+        added_ac_list: List[Activity] = list()
         new_end_time: dt.datetime
+
         if target_ac.interval.end != _interval.end:
-            idle_id = self.make_ac_id_for_type(self.idle_type)
+            idle_id = self.make_ac_id_for_type(idle_type)
             new_end_time = target_ac.interval.end
             new_interval = Interval(_interval.end, new_end_time)
-            idle_after_ac = Activity(idle_id, self.idle_type, new_interval)
+            idle_after_ac = Idle(
+                idle_id, new_interval, self.mc, self.ac_types_param
+            )
             added_ac_list.append(idle_after_ac)
-            self.ac_counts[self.idle_type] += 1
-            self.ac_cum_counts[self.idle_type] += 1
+            self.ac_counts[idle_type] += 1
+            self.ac_cum_counts[idle_type] += 1
 
         added_ac_list.append(ac)
         self.ac_counts[ac.ac_type] += 1
@@ -348,19 +434,22 @@ class MCSchedule:
 
         new_start_time: dt.datetime
         if target_ac.interval.start != _interval.start:
-            idle_id = self.make_ac_id_for_type(self.idle_type)
+            idle_id = self.make_ac_id_for_type(idle_type)
             new_start_time = target_ac.interval.start
             new_interval = Interval(new_start_time, _interval.start)
-            idle_before_ac = Activity(idle_id, self.idle_type, new_interval)
+            idle_before_ac = Idle(
+                idle_id, new_interval, self.mc, self.ac_types_param
+            )
             added_ac_list.append(idle_before_ac)
-            self.ac_counts[self.idle_type] += 1
-            self.ac_cum_counts[self.idle_type] += 1
+            self.ac_counts[idle_type] += 1
+            self.ac_cum_counts[idle_type] += 1
 
-        self.ac_counts[self.idle_type] -= 1
         self.delete_ac_id(target_ac_id)
+
         for added_ac in added_ac_list:
             self.ac_id_list.insert(target_ac_idx, added_ac.ac_id)
             self.ac_dict[added_ac.ac_id] = added_ac
+
         if ac.interval.duration() == 0:
             print(f"Warning: {ac} has duration of 0")
         return True
@@ -372,6 +461,7 @@ class MCSchedule:
         Args:
             given_interval (Interval)
         """
+        idle_type = self.ac_types_param.idle
         self.error_if_interval_outside_horizon(given_interval)
 
         target_ac_id_list = self.ac_id_list_of_interval(given_interval)
@@ -384,7 +474,7 @@ class MCSchedule:
             new_start_time = self.horizon.start
         else:
             ac_before_target = self.ac_dict[self.ac_id_list[first_ac_idx - 1]]
-            before_is_idle = ac_before_target.ac_type == self.idle_type
+            before_is_idle = ac_before_target.ac_type == idle_type
             if not before_is_idle:
                 new_start_time = ac_before_target.interval.end
 
@@ -394,7 +484,7 @@ class MCSchedule:
             new_end_time = self.horizon.end
         else:
             ac_after_target = self.ac_dict[self.ac_id_list[last_ac_idx + 1]]
-            after_is_idle = ac_after_target.ac_type == self.idle_type
+            after_is_idle = ac_after_target.ac_type == idle_type
             if after_is_idle:
                 new_end_time = ac_after_target.interval.end
             else:
@@ -436,14 +526,14 @@ class MCSchedule:
         # create idle job and put it in the target_idx_first sequence
         # -|=job=||========idle========||=job=|-------
         if not before_is_idle and not after_is_idle:
-            idle_id = self.make_ac_id_for_type(self.idle_type)
-            new_idle_activity = Activity(
-                idle_id, self.idle_type, Interval(new_start_time, new_end_time)
+            idle_id = self.make_ac_id_for_type(idle_type)
+            new_idle_activity = Idle(
+                idle_id, idle_type, Interval(new_start_time, new_end_time)
             )
             self.ac_id_list.insert(first_ac_idx, idle_id)
             self.ac_dict[idle_id] = new_idle_activity
-            self.ac_counts[self.idle_type] += 1
-            self.ac_cum_counts[self.idle_type] += 1
+            self.ac_counts[idle_type] += 1
+            self.ac_cum_counts[idle_type] += 1
 
     def idle_interval_list(self, release_date) -> List[Interval]:
         """
@@ -458,7 +548,7 @@ class MCSchedule:
             return return_list
         for ac in self.ac_iter():
             if (
-                ac.ac_type == self.idle_type
+                ac.ac_type == self.ac_types_param.idle
                 and ac.interval.end >= release_date
             ):
                 return_list.append(ac.interval)
@@ -500,35 +590,40 @@ class MCSchedule:
 
 
 def main():
-    from mstk.schedule.activity import Operation, Breakdown
     from mstk.schedule.job import Job
 
-    ac_types = AcTypes("utf-8", True, True)
-    machine_1 = Machine("test machine 1", ac_types)
-    machine_1.reset_schedule(Interval(0, 20))
+    ac_types_param = AcTypesParam()
+    machine_1 = Machine("test machine 1")
+    machine_1.reset_schedule(Interval(0, 20), ac_types_param)
     job_1 = Job("Job_1")
     mc_schedule_1 = machine_1.mc_schedule
 
     # add activity test
     ac_operation_1 = Operation(
-        "test ops 1",
-        ac_types.operation,
-        machine_1,
-        job_1,
-        Interval(1, 3),
+        "test ops 1", Interval(1, 3), machine_1, job_1, ac_types_param
     )
-    ac_setup_1 = Activity("test setup 1", ac_types.setup, Interval(0, 1))
+    # ac_setup_1 = Activity(
+    #     "test setup 1", ac_types.setup, Interval(0, 1), ac_types_param
+    # )
     ac_breakdown_1 = Breakdown(
-        "test brkdown 1", ac_types.breakdown, machine_1, Interval(4, 8)
+        "test brkdown 1",
+        Interval(4, 8),
+        machine_1,
+        ac_types_param,
     )
     mc_schedule_1.add_activity(ac_operation_1)
-    mc_schedule_1.add_activity(ac_setup_1)
+    # mc_schedule_1.add_activity(ac_setup_1)
     mc_schedule_1.add_activity(ac_breakdown_1)
 
-    print("iter begins")
+    print("ac_iter begins")
+    for ac in mc_schedule_1.ac_iter():
+        print(ac)
+    print("ac_iter ends")
+
+    print("\nactual_iter begins")
     for ac in mc_schedule_1.actual_ac_iter():
         print(ac)
-    print("iter ends")
+    print("actual_iter ends")
 
     # for ac in mc_schedule_1.ac_iter():
     #     print(ac)

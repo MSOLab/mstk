@@ -122,6 +122,7 @@ class PlotSchedule:
                     start = mdates.date2num(new_interval.start)
                     end = mdates.date2num(new_interval.end)
                     proc = end - start
+                    # if ac.ac_type ==
                     ac_patch = patches.Rectangle(
                         (start, 1.1 * target_mc_index),
                         proc,
@@ -165,7 +166,7 @@ class PlotSchedule:
                     1  # if ("overlay_schedule" not in kwargs) else 0.5
                 )
 
-                if ac.ac_type == self.schedule.ac_types.operation:
+                if ac.ac_type == self.schedule.ac_types_param.operation:
                     job_id = job_list.index(ac.job.job_id)
                     face_color = self.cmap.material_cmap(job_id)[0]
                     ac_patch = patches.Rectangle(
@@ -177,7 +178,7 @@ class PlotSchedule:
                     )
                     self.operation_patch_list += [ac_patch]
 
-                if ac.ac_type == self.schedule.ac_types.breakdown:
+                if ac.ac_type == self.schedule.ac_types_param.breakdown:
                     face_color = "#ffebee"
                     edge_color = "k"
                     linestyle = "--"

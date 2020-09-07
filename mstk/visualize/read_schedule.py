@@ -3,7 +3,7 @@ from typing import List, Dict, Optional
 from datetime import datetime
 from dateutil.parser import parse as dt_parse
 
-from mstk.schedule.ac_types import AcTypes
+from mstk.schedule.ac_types import AcTypesParam
 from mstk.schedule.interval import Interval
 from mstk.schedule.schedule import Schedule
 
@@ -79,11 +79,9 @@ def read_schedule(proj_folder: str):
     horizon = find_horizon(ac_info_full_name, horizon_start, horizon_end)
 
     if input_dict["file_info"]["ac_types_info"] == None:
-        ac_types = AcTypes("utf-8", True, True)
+        ac_types = AcTypesParam()
     else:
-        ac_types = AcTypes(
-            "utf-8", True, True, filename=proj_folder + "\\ac_types.json"
-        )
+        ac_types = AcTypesParam(filename=proj_folder + "\\ac_types.json")
 
     schedule = Schedule(input_dict["schedule_name"], horizon, ac_types)
 

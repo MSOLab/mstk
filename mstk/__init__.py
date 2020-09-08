@@ -1,5 +1,5 @@
 __all__ = [
-    "AcTypes",
+    "AcTypesParam",
     "Interval",
     "Activity",
     "Operation",

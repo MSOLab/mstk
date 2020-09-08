@@ -2,7 +2,7 @@
 Created at 10th Aug. 2020
 """
 
-__all__ = [AcTypesParam]
+__all__ = ["AcTypesParam"]
 
 import json
 from typing import List

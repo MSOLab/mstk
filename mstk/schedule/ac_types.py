@@ -30,7 +30,7 @@ class AcTypesParam:
     def __init__(
         self,
         encoding: str = "utf-8",
-        filename: str = f"{current_path}/default.json",
+        filename: str = f"{current_path}/ac_types.json",
     ):
         self.all_types: List[str] = list()
         with open(filename, encoding=encoding) as file_data:

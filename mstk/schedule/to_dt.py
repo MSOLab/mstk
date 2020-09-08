@@ -1,8 +1,23 @@
 """moment to datetime.datetime function
-Created at 10th Aug. 2020
+Created on 10th Aug. 2020
 """
-from typing import Union
+from typing import Union, List
 import datetime as dt
+
+__all__ = ["to_dt_datetime"]
+
+
+class Moment:
+    """A container for time-related object (e.g. dt.datetime, int, ...)
+
+    Warning:
+        Not implemented
+    """
+
+    __slots__ = ["__value"]
+
+    def __init__(self, value):
+        raise NotImplementedError("Moment is not supported")
 
 
 def to_dt_datetime(moment: Union[int, dt.datetime]) -> dt.datetime:
@@ -16,12 +31,22 @@ def to_dt_datetime(moment: Union[int, dt.datetime]) -> dt.datetime:
     """
     if isinstance(moment, dt.datetime):
         return moment
-    return dt.datetime.fromtimestamp(moment)
+    elif isinstance(moment, int):
+
+        return dt.datetime.fromtimestamp(moment)
+    else:
+        raise TypeError(
+            f"moment [{moment}] of type {type(moment)} is not supported"
+        )
 
 
 def main():
     print(to_dt_datetime(1))
     print(to_dt_datetime(dt.datetime(2020, 8, 10)))
+    try:
+        to_dt_datetime("aa")
+    except Exception as e:
+        print("## (Intended) ", e)
 
 
 if __name__ == "__main__":

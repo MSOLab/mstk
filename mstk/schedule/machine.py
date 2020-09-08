@@ -1,10 +1,13 @@
-""" MCSchedule class definition
-Created at 10th Aug. 2020
+""" Machine class definition
+Created on 10th Aug. 2020
 """
+__all__ = ["Machine", "MCSchedule"]
+
 # common Python packages
-import math
+from typing import List, Dict, Tuple, Any, Iterator, Union, Callable
+
 import datetime as dt
-from typing import List, Dict, Tuple, Any, Iterator, Union
+import warnings
 
 # defined packages
 from mstk.schedule import to_dt
@@ -28,13 +31,23 @@ class Machine:
         return self.__mc_id
 
     @property
+    def contents(self):
+        return self.__contents
+
+    @property
     def mc_schedule(self):
         try:
             return self.__mc_schedule
         except:
             raise
 
-    def reset_schedule(self, horizon: Interval, ac_types_param):
+    def reset_schedule(self, horizon: Interval, ac_types_param: AcTypesParam):
+        """Reset the mc_schedule
+
+        Args:
+            horizon (Interval): a new horizon to be assigned
+            ac_types_param (AcTypesParam): a container of ac types
+        """
         self.__mc_schedule = MCSchedule(
             self.mc_id, self, horizon, ac_types_param
         )
@@ -61,13 +74,17 @@ class Machine:
         return self.__mc_schedule.actual_ac_iter()
 
     def add_contents(self, key: str, value: Any):
-        """adds additional contents to Machine
+        """Adds supplementary information of the machine to a dictionary [contents]
 
         Args:
-            key (str): [description]
-            value (Any): [description]
+            key (str): an id for the content
+            value (Any): the value to be stored
         """
         self.__contents[key] = value
+
+    def display_contents(self, func: Callable, **kwargs):
+        """Prints all the contents (default)"""
+        func(self.contents)
 
 
 class MCSchedule:
@@ -156,7 +173,7 @@ class MCSchedule:
         self.ac_cum_counts[self.ac_types_param.idle] = 1
 
     def make_ac_id_for_type(self, ac_type: str) -> str:
-        """Make ac_id with postfix starting with number 1
+        """Makes ac_id with cumulative counts as the postfix
 
         Args:
             ac_type (str): pre-defined ac_type to make new ID
@@ -198,11 +215,15 @@ class MCSchedule:
                 yield ac
 
     def hbar_tuple_list(self) -> List[Tuple[dt.datetime, dt.timedelta]]:
-        """horizontal bar tuple list for Gantt chart making
+        """Returns a horizontal bar tuple list
+
+        Warnings:
+            Use an iterator ac_iter to retrieve activities
 
         Returns:
             List[Tuple[dt.datetime, dt.timedelta]]: Tuple of [start, duration]
         """
+        warnings.warn("This module is replaced by ac_iter", DeprecationWarning)
         return_list = list()
         for ac_id in self.ac_id_list:
             ac = self.ac_dict[ac_id]
@@ -210,7 +231,7 @@ class MCSchedule:
         return return_list
 
     def delete_ac_id(self, ac_id: str):
-        """Delete Activity instance info by ac_id from ac_dict
+        """Deletes Activity instance info by ac_id from ac_dict
 
         Args:
             ac_id (str)
@@ -220,34 +241,39 @@ class MCSchedule:
         self.ac_id_list.remove(ac_id)
         self.ac_dict.pop(ac_id)
 
-    def before_horizon_start(self, d_moment: dt.datetime) -> bool:
-        """
+    def before_horizon_start(self, moment: dt.datetime) -> bool:
+        """Check if d_moment starts before the horizon
+
         Args:
-            d_moment (dt.datetime)
+            moment (datetime.datetime)
 
         Returns:
-            bool: True if d_moment is before horizon start
+            bool: True if d_moment is before horizon.start
         """
-        return d_moment < self.horizon.start
+        return moment < self.horizon.start
 
-    def after_horizon_end(self, d_moment: dt.datetime) -> bool:
-        """
+    def after_horizon_end(self, moment: dt.datetime) -> bool:
+        """Check if d_moment starts before the horizon
+
         Args:
-            d_moment (dt.datetime)
+            moment (datetime.datetime)
 
         Returns:
-            bool: True if d_moment is after horizon end
+            bool: True if moment is after horizon.end
         """
-        return d_moment > self.horizon.end
+        return moment > self.horizon.end
 
-    def error_if_moment_outside_horizon(self, moment):
-        """
+    def error_if_moment_outside_horizon(self, moment: dt.datetime) -> bool:
+        """Check if moment is outside the horizon
+
         Args:
-            moment ([type])
+            moment (datetime.datetime)
 
         Raises:
             ValueError: Given moment is before horizon start
             ValueError: Given moment is after horizon end
+        Returns:
+            bool: True if no error is found
         """
         _moment = to_dt.to_dt_datetime(moment)
         if self.before_horizon_start(_moment):
@@ -258,11 +284,13 @@ class MCSchedule:
             err_str = f"Moment {moment} after MCSchedule horizon"
             err_str += f" {self.horizon.end} of machine {self.mc_id}"
             raise ValueError(err_str)
+        return True
 
-    def ac_id_of_moment(self, moment) -> str:
-        """
+    def ac_id_of_moment(self, moment: dt.datetime) -> str:
+        """Returns the activity occupying moment
+
         Args:
-            moment ([type])
+            moment (datetime.datetime)
 
         Raises:
             SyntaxError: no Activity instance occupying moment
@@ -284,12 +312,12 @@ class MCSchedule:
         e_str += f"{moment} of machine {self.mc_id}"
         raise SyntaxError(e_str)
 
-    def delete_ac_beyond_moment(self, moment):
-        """delete all activities beyond moment
+    def delete_ac_beyond_moment(self, moment: dt.datetime):
+        """Deletes all activities beyond moment
         the end of the activity occupying the moment is changed to the moment
 
         Args:
-            moment ([type])
+            moment (datetime.datetime)
         """
         _moment = to_dt.to_dt_datetime(moment)
         # If given moment is beyond MCSchedule horizon, end
@@ -312,7 +340,7 @@ class MCSchedule:
             self.ac_id_list.pop()
 
     def in_horizon_interval(self, given_interval: Interval) -> bool:
-        """
+        """Checks whether the given interval conforms to the horizon
 
         Args:
             given_interval (Interval): an interval to be checked
@@ -327,7 +355,7 @@ class MCSchedule:
         return True
 
     def error_if_interval_outside_horizon(self, given_interval: Interval):
-        """
+        """Checks if the given interval is outside the horizon
 
         Args:
             given_interval (Interval): an interval to be checked
@@ -341,12 +369,13 @@ class MCSchedule:
             raise ValueError(err_str)
 
     def ac_id_list_of_interval(self, given_interval: Interval) -> List[str]:
-        """
+        """Returns a list of activities of the MCSchedule that conform to the given interval
+
         Args:
             given_interval (Interval): An interval to be examined
 
         Returns:
-            List[str]:
+            List[str]: activity list
         """
         self.error_if_interval_outside_horizon(given_interval)
         return_list: List[str] = list()
@@ -359,7 +388,8 @@ class MCSchedule:
         return return_list
 
     def is_idle_only(self, given_interval: Interval) -> bool:
-        """
+        """Check if the given interval contains a single activity
+
         Args:
             given_interval (Interval):
 
@@ -376,7 +406,7 @@ class MCSchedule:
         return target_ac_type == self.ac_types_param.idle
 
     def add_activity(self, ac: Activity) -> bool:
-        """Try adding given Activity instance with given interval
+        """Tries to add given Activity instance with given interval
 
         Args:
             ac (Activity): with ac_type and Interval set
@@ -455,7 +485,7 @@ class MCSchedule:
         return True
 
     def del_activities_in_interval(self, given_interval: Interval):
-        """Delete all activities within given interval
+        """Deletes all activities within given interval
         and fill empty space with idle activity
 
         Args:
@@ -535,13 +565,14 @@ class MCSchedule:
             self.ac_counts[idle_type] += 1
             self.ac_cum_counts[idle_type] += 1
 
-    def idle_interval_list(self, release_date) -> List[Interval]:
-        """
+    def idle_interval_list(self, release_date: dt.datetime) -> List[Interval]:
+        """Returns a list of idle activities
+
         Args:
-            release_date ([type])
+            release_date (datetime.datetime)
 
         Returns:
-            List[Interval]: list of idle intervals beyond release_date
+            List[Interval]: list of idle activities beyond release_date
         """
         return_list: List[Interval] = list()
         if self.after_horizon_end(release_date):
@@ -555,7 +586,7 @@ class MCSchedule:
         return return_list
 
     def last_ac_id_of_type(self, target_type: str) -> str:
-        """Return ac_id of last Activity instance with target_type
+        """Returns ac_id of last Activity instance with target_type
 
         Args:
             target_type (str): an ac_type value
@@ -571,7 +602,7 @@ class MCSchedule:
         return target_ac_id
 
     def last_ac_interval_of_type(self, target_type: str) -> Interval:
-        """Return interval of last Activity instance with target_type
+        """Returns interval of last Activity instance with target_type
 
         Args:
             target_type (str): an ac_type value
@@ -602,9 +633,6 @@ def main():
     ac_operation_1 = Operation(
         "test ops 1", Interval(1, 3), machine_1, job_1, ac_types_param
     )
-    # ac_setup_1 = Activity(
-    #     "test setup 1", ac_types.setup, Interval(0, 1), ac_types_param
-    # )
     ac_breakdown_1 = Breakdown(
         "test brkdown 1",
         Interval(4, 8),
@@ -612,7 +640,6 @@ def main():
         ac_types_param,
     )
     mc_schedule_1.add_activity(ac_operation_1)
-    # mc_schedule_1.add_activity(ac_setup_1)
     mc_schedule_1.add_activity(ac_breakdown_1)
 
     print("ac_iter begins")
@@ -625,14 +652,13 @@ def main():
         print(ac)
     print("actual_iter ends")
 
-    # for ac in mc_schedule_1.ac_iter():
-    #     print(ac)
-
     # delete activity test
     print("\ntest ops 1 deleted")
     mc_schedule_1.del_activities_in_interval(ac_operation_1.interval)
     for ac in mc_schedule_1.ac_iter():
         print(ac)
+
+    print(mc_schedule_1.ac_id_list_of_interval(Interval(5, 6)))
 
 
 if __name__ == "__main__":

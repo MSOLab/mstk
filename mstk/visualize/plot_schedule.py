@@ -1,7 +1,5 @@
-from typing import List, Dict, Iterator
-
-from mstk.schedule.schedule import Schedule
-from mstk.visualize.color_map import Cmap
+__all__ = ["PlotSchedule"]
+from typing import List, Dict, Iterator, Callable, Any
 
 import matplotlib
 from matplotlib import pyplot as plt
@@ -10,38 +8,91 @@ import matplotlib.patches as patches
 import matplotlib.dates as mdates
 import matplotlib.lines as lines
 
-# from natsort import natsorted
-
-# matplotlib.use("Qt5Agg")
+from mstk.schedule.schedule import Schedule
+from mstk.visualize.color_map import Cmap
 
 
 class PlotSchedule:
-    """The test version of schedule drawing (using matplotlib)
-    Later, the forms in this class are to be implemented in a PyQt5 form
+    """A prototype version of schedule drawing (using matplotlib)
+
+    Later, the methods in this class are to be implemented concordant to PyQt5
     """
 
     def __init__(self, schedule: Schedule, **kwargs):
-        self.schedule = schedule
-        self.mc_id_list = schedule.mc_id_list
-        self.mc_id_list.reverse()
-        self.job_id_list = schedule.job_id_list
+
+        self.__schedule: Schedule = schedule
+        self.__mc_id_list: List[str] = [mc_id for mc_id in schedule.mc_id_list]
+        self.__mc_id_list.reverse()
+        self.__job_id_list: List[str] = [
+            job_id for job_id in schedule.job_id_list
+        ]
 
         self.cmap = Cmap()
+        self.__legend_patch_list: List[patches.Rectangle] = []
+        self.__horz_line_list: List[lines.Line2D] = []
+        self.__operation_patch_list: List[patches.Rectangle] = []
+        self.__breakdown_patch_list: List[patches.Rectangle] = []
 
-        self.horz_line_list: List[lines.Line2D] = []
-        self.operation_patch_list: List[patches.Rectangle] = []
-        self.breakdown_patch_list: List[patches.Rectangle] = []
-        self.ac_color_list: List[str] = []
-
+        # **kwargs
         self.legend_on = kwargs["legend_on"] if "legend_on" in kwargs else True
         self.horz_line_on = (
             kwargs["horz_line_on"] if "horz_line_on" in kwargs else False
         )
 
-    # TODO: implement sorting options for machines and jobs
-    # TODO: implement: showing used mc / job only
+    @property
+    def schedule(self) -> Schedule:
+        return self.__schedule
+
+    @property
+    def mc_id_list(self) -> List[str]:
+        return self.__mc_id_list
+
+    @property
+    def job_id_list(self) -> List[str]:
+        return self.__job_id_list
+
+    @property
+    def horz_line_list(self) -> List[lines.Line2D]:
+        return self.__horz_line_list
+
+    @property
+    def legend_patch_list(self) -> List[patches.Rectangle]:
+        return self.__legend_patch_list
+
+    @property
+    def operation_patch_list(self) -> List[patches.Rectangle]:
+        return self.__operation_patch_list
+
+    @property
+    def breakdown_patch_list(self) -> List[patches.Rectangle]:
+        return self.__breakdown_patch_list
+
+    def sort_mc_id_list(
+        self, func: Callable[[str], Any], reverse: bool = False
+    ):
+        """Sorts the mc_id_list according to values of func(mc_id)
+
+        Args:
+            func (Callable[[str], Any]): a key generator
+            reverse (bool, optional): whether to sort in a descending order. Defaults to False.
+        """
+
+        self.__mc_id_list.sort(key=func, reverse=reverse)
+
+    def sort_job_id_list(
+        self, func: Callable[[str], Any], reverse: bool = False
+    ):
+        self.__job_id_list.sort(key=func, reverse=reverse)
+
+        """Sorts the job_id_list according to values of func(mc_id)
+
+        Args:
+            func (Callable[[str], Any]): a key generator
+            reverse (bool, optional): whether to sort in a descending order. Defaults to False.
+        """
 
     def reset_figure(self):
+        """Initializes figure, axis, and patch lists"""
         self.fig = plt.figure(
             figsize=(20, len(self.schedule.mc_id_list) * 0.4)
         )
@@ -50,12 +101,13 @@ class PlotSchedule:
 
         self.format_ax_main()
 
-        self.horz_line_list = []
-        self.operation_patch_list = []
-        self.breakdown_patch_list = []
-        self.ac_color_list = []
+        self.__horz_line_list = []
+        self.__legend_patch_list = []
+        self.__operation_patch_list = []
+        self.__breakdown_patch_list = []
 
     def format_ax_main(self):
+        """Sets the main axis of a figure"""
         # set limits in ax_main
         self.x_min = mdates.date2num(self.schedule.horizon.start)
         self.x_max = mdates.date2num(self.schedule.horizon.end)
@@ -64,7 +116,7 @@ class PlotSchedule:
         # set x_axis in datetime format
         locator = mdates.AutoDateLocator(minticks=4)
         formatter = mdates.AutoDateFormatter(locator)
-        # formatter = mdates.MinuteLocator
+
         self.ax_main.xaxis.set_major_locator(locator)
         self.ax_main.xaxis.set_major_formatter(formatter)
         n = len(self.mc_id_list)
@@ -73,28 +125,46 @@ class PlotSchedule:
         self.ax_main.set_yticklabels(self.mc_id_list)
 
     def draw_legend(self):
-        # TODO: Show the legend in another window using PyQt5
+        """Draw legends on the second windows"""
         job_list = self.job_id_list
         ncol = int(len(job_list) / 20) + 1
 
         self.fig_legend = plt.figure(figsize=(ncol * 1.4, 4), frameon=False)
         self.ax_legend = self.fig_legend.add_subplot()
 
-        self.legend_patch_list = []
+        self.__legend_patch_list = []
         for job_id in job_list:
             color_id = job_list.index(job_id)
             face_color = self.cmap.material_cmap(color_id)[0]
             legend_patch = patches.Rectangle(
                 (0, 0), 0, 0, facecolor=face_color, alpha=1, label=job_id
             )
-            self.legend_patch_list += [legend_patch]
+            self.legend_patch_list.append(legend_patch)
             self.ax_legend.add_patch(legend_patch)
 
         self.ax_legend.legend(ncol=ncol, loc="upper left")
         self.ax_legend.axis("off")
+
+        def on_patch_click(event):
+            """Triggers displaying contents for clicked objects
+
+            Args:
+                event (matplotlib.backend_bases.MouseEvent): a mouse click event
+            """
+            for legend_handle in self.ax_legend.legend_.legendHandles:
+                cont, ind = legend_handle.contains(event)
+                if cont:
+                    job_id = legend_handle._label
+                    self.schedule.job_dict[job_id].display_contents(print)
+
+        self.fig_legend.canvas.mpl_connect(
+            "button_press_event", on_patch_click
+        )
+
         self.fig_legend.tight_layout()
 
     def draw_horz_line(self):
+        """Draws horizontal lines to divide neiboring schedules"""
         for target_mc_index, target_mc_id in enumerate(self.mc_id_list):
             height = 1.1 * target_mc_index
             self.horz_line_list += [
@@ -106,9 +176,26 @@ class PlotSchedule:
         self.ax_main.add_collection(self.horz_line_collection)
 
     def generate_overlay_schedule(self, overlay_schedule: Schedule):
+        """Generates a patch collection to overlay
+
+        Args:
+            overlay_schedule (Schedule): a schedule to overlay
+
+        Returns:
+            matplotlib.collections.PatchCollection: a collection of the trimmed patches
+
+        """
         overlay_patch_list: List[patches] = []
 
-        def patch_generator(overlay_schedule):
+        def patch_generator(overlay_schedule: Schedule):
+            """Generates trimmed patches of overlay_schedule according to the new horizon
+
+            Args:
+                overlay_schedule (Schedule): A schedule to overlay
+
+            Yields:
+                matplotlib.patches.Rectangle: a patch of the trimmed activity
+            """
             for mc_id, mc in overlay_schedule.mc_dict.items():
                 if mc_id not in self.mc_id_list:
                     continue
@@ -122,7 +209,6 @@ class PlotSchedule:
                     start = mdates.date2num(new_interval.start)
                     end = mdates.date2num(new_interval.end)
                     proc = end - start
-                    # if ac.ac_type ==
                     ac_patch = patches.Rectangle(
                         (start, 1.1 * target_mc_index),
                         proc,
@@ -143,11 +229,9 @@ class PlotSchedule:
         )
 
     def draw_Gantt(self, **kwargs):
+        """Draws a Gantt chart based on self.schedule and parameters"""
 
-        # Draw activities
-
-        # TODO: change colors according to the properties
-
+        # TODO: change color maps according to various operation properties
         self.reset_figure()
 
         job_list = self.schedule.job_id_list
@@ -162,10 +246,6 @@ class PlotSchedule:
                 end = mdates.date2num(ac.interval.end)
                 proc = end - start
 
-                alpha_value = (
-                    1  # if ("overlay_schedule" not in kwargs) else 0.5
-                )
-
                 if ac.ac_type == self.schedule.ac_types_param.operation:
                     job_id = job_list.index(ac.job.job_id)
                     face_color = self.cmap.material_cmap(job_id)[0]
@@ -174,9 +254,8 @@ class PlotSchedule:
                         proc,
                         1,
                         facecolor=face_color,
-                        alpha=alpha_value,
                     )
-                    self.operation_patch_list += [ac_patch]
+                    self.operation_patch_list.append(ac_patch)
 
                 if ac.ac_type == self.schedule.ac_types_param.breakdown:
                     face_color = "#ffebee"
@@ -188,15 +267,12 @@ class PlotSchedule:
                         proc,
                         1,
                         facecolor=face_color,
-                        alpha=alpha_value,
                         edgecolor=edge_color,
                         linestyle=linestyle,
                     )
-                    self.breakdown_patch_list += [ac_patch]
+                    self.breakdown_patch_list.append(ac_patch)
 
                 ac_patch.ac = ac
-
-                # self.ax_main.add_patch(ac_patch)
 
         ### PatchCollection for efficient rendering
         self.operation_patch_collection = PatchCollection(
@@ -216,19 +292,30 @@ class PlotSchedule:
             )
 
         def on_patch_click(event):
+            """Triggers displaying contents for clicked objects
+
+            Args:
+                event (matplotlib.backend_bases.MouseEvent): a mouse click event
+            """
+            for tick in self.ax_main.yaxis.majorTicks:
+                cont, ind = tick.label.contains(event)
+                if cont:
+                    mc = self.schedule.mc_dict[tick.label._text]
+                    mc.display_contents(print)
+                    return
 
             cont, ind = self.operation_patch_collection.contains(event)
             if cont:
                 index = ind["ind"][0]
-                # TODO: implement print function for each activity type
-                print(self.operation_patch_list[index].ac.job.job_id)
+                ac = self.operation_patch_list[index].ac
+                ac.display_contents(print)
                 return
 
             cont, ind = self.breakdown_patch_collection.contains(event)
             if cont:
                 index = ind["ind"][0]
-                # TODO: implement print function for each activity type
-                print("breakdown")
+                ac = self.breakdown_patch_list[index].ac
+                ac.display_contents(print)
                 return
 
         self.fig.canvas.mpl_connect("button_press_event", on_patch_click)
@@ -242,23 +329,22 @@ class PlotSchedule:
 def main():
     from datetime import datetime
     from mstk.test import sample_proj_folder
-    from mstk.visualize.read_schedule import read_schedule
+    from mstk.read_schedule import read_schedule
 
     test_schedule = read_schedule(sample_proj_folder)
     new_schedule = test_schedule.transform(
         f"copy of {test_schedule.schedule_id}",
-        # mc_id_list=mc_id_list,
         start=datetime(2020, 1, 1, 14),
         end=datetime(2020, 1, 3, 11),
         horz_overlap="trim",
     )
-    plot_option = {"legend_on": False, "horz_line_on": False}
+    plot_option = {"legend_on": True, "horz_line_on": False}
     plt_schedule = PlotSchedule(test_schedule, **plot_option)
-    # plt_schedule.draw_Gantt()
     plt_schedule.draw_Gantt(overlay_schedule=new_schedule)
+    plt_schedule.sort_mc_id_list(str)
     plt_schedule.draw_Gantt(overlay_schedule=new_schedule)
+    plt_schedule.sort_job_id_list(str, reverse=True)
     plt_schedule.draw_Gantt(overlay_schedule=new_schedule)
-    plt.show()
 
 
 if __name__ == "__main__":

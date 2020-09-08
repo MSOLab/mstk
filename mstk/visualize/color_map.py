@@ -1,15 +1,18 @@
-"""selecting a colormap
+""" a class for colormap
 Created at 30th Aug. 2020
 """
-import json
+
 from typing import List, Tuple
+
+import json
 import os
 
+__all__ = ["Cmap"]
 current_path = os.path.dirname(os.path.abspath(__file__))
 
 
 class Cmap:
-    """A class for selecting colormaps"""
+    """A class for colormaps"""
 
     def __init__(
         self,
@@ -24,7 +27,7 @@ class Cmap:
                 self.__dict__[key] = value
 
     def simple_cmap(self, index: int) -> Tuple[str, str]:
-        """selecting a color among 20 colors
+        """Selects a color among 20 colors from https://sashamaps.net/docs/resources/20-colors/
 
         Args:
             index (int): index for the color
@@ -32,7 +35,7 @@ class Cmap:
         Returns:
             Tuple[str, str]: [color (in hex), font (in hex)]
         """
-        cmap = self.simple
+        cmap = self.__dict__["simple"]
         num_color = len(cmap["cmap"])
         return (
             cmap["cmap"][index % num_color],
@@ -40,7 +43,7 @@ class Cmap:
         )
 
     def material_cmap(self, index: int) -> Tuple[str, str]:
-        """selecting a color using material colormap with 16 sets (9 levels in each)
+        """Selects a color using material design colormap with 14 sets (9 levels in each)
 
         Args:
             index (int): index for the color
@@ -85,6 +88,8 @@ def main():
     cmap = Cmap()
     for i in range(300):
         print(i, cmap.material_cmap(i))
+    for i in range(50):
+        print(i, cmap.simple_cmap(i))
 
 
 if __name__ == "__main__":

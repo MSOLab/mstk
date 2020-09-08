@@ -1,14 +1,19 @@
 """ Schedule class definition
-Created at 13th Aug. 2020
+Created on 13th Aug. 2020
 """
 
-from typing import List, Dict, Iterator, Optional
+__all__ = ["Schedule"]
+
+from typing import TYPE_CHECKING, List, Dict, Iterator, Optional
+
+
+import datetime as dt
+
 from mstk.schedule.interval import Interval
 from mstk.schedule.machine import Machine
 from mstk.schedule.ac_types import AcTypesParam
 from mstk.schedule.activity import Activity, Operation, Breakdown
 from mstk.schedule.job import Job
-from datetime import datetime
 
 
 class Schedule:
@@ -120,8 +125,8 @@ class Schedule:
         self,
         mc_id: str,
         job_id: str,
-        start: datetime,
-        end: datetime,
+        start: dt.datetime,
+        end: dt.datetime,
         oper_id: str = "",
     ) -> Operation:
         """adds an operation to the corresponding mc_schedule and maps the activity to its job
@@ -138,7 +143,7 @@ class Schedule:
             KeyError: the job id is not valid
 
         Returns:
-            [Operation]: the created Operation object
+            Operation: the created Operation object
         """
         if mc_id not in self.mc_id_list:
             raise KeyError(f"Machine {mc_id} does not exist")
@@ -166,7 +171,7 @@ class Schedule:
         return new_operation
 
     def add_breakdown(
-        self, mc_id: str, start: datetime, end: datetime
+        self, mc_id: str, start: dt.datetime, end: dt.datetime
     ) -> Breakdown:
         """adds an operation to the corresponding mc_schedule
 
@@ -205,7 +210,7 @@ class Schedule:
     def transform_interval_to_horizon(
         self, interval: Interval, horizon: Interval, horz_overlap: str
     ) -> Optional[Interval]:
-        """transforms an interval to conform with the horizon
+        """Transforms an interval to conform with a new horizon
 
         Args:
             interval (Interval): an interval to be processed
@@ -213,10 +218,10 @@ class Schedule:
             horz_overlap (str): an option for intervals that overlaps to the horizon boundary
 
         Raises:
-            ValueError: [description]
+            ValueError: **horz_overlap** is not valid
 
         Returns:
-            Optional[Interval]: [description]
+            Optional[Interval]: a trimmed interval if exists
         """
         if horz_overlap in ["exclude"]:
             if (horizon.in_closed_interval(interval.start)) and (
@@ -234,13 +239,29 @@ class Schedule:
 
     def transform(
         self,
-        schedule_id,
-        mc_id_list=None,
-        start=None,
-        end=None,
-        horz_overlap="trim",
+        schedule_id: str,
+        mc_id_list: List[str] = None,
+        start: dt.datetime = None,
+        end: dt.datetime = None,
+        horz_overlap: str = "trim",
         **kwargs,
     ):
+        """Transforms the schedule to conform with a new horizon
+
+        Args:
+            schedule_id (str): a name of the schedule
+            mc_id_list (List[str], optional): a list of machine ids (if None, copied from **self.schedule**).
+            start (dt.datetime, optional): a new value of the horizon  (if None, copied from **self.schedule**).
+            end (dt.datetime, optional): a new value of the horizon. (if None, copied from **self.schedule**).
+            horz_overlap (str, optional): an option for operations on the horizon boundary Defaults to "trim".
+
+        Raises:
+            ValueError: **start** or **end** does not conform to the horizon
+            NotImplementedError: horz_overlap 'include' is prohibhited
+
+        Returns:
+            Schedule: a trimmed schedule
+        """
 
         mc_id_list = self.mc_id_list if (mc_id_list == None) else mc_id_list
 
@@ -264,7 +285,7 @@ class Schedule:
             )
         elif horz_overlap in ["include"]:
             raise NotImplementedError(
-                "horz_overlap option 'include' is yet prohibited to prevent an inconsistent mc_schedule"
+                "horz_overlap option 'include' is prohibited to prevent an inconsistent mc_schedule"
             )
 
         new_schedule = Schedule(schedule_id, new_horizon, self.ac_types_param)
@@ -306,8 +327,8 @@ class Schedule:
 def transform_test():
     ### Transformation test
     from mstk.test import sample_proj_folder
-    from mstk.visualize.read_schedule import read_schedule
     from mstk.visualize.plot_schedule import PlotSchedule
+    from mstk.read_schedule import read_schedule
 
     test_schedule = read_schedule(sample_proj_folder)
     mc_id_list = test_schedule.mc_id_list[
@@ -315,9 +336,8 @@ def transform_test():
     ]
     new_schedule = test_schedule.transform(
         f"copy of {test_schedule.schedule_id}",
-        # mc_id_list=mc_id_list,
-        start=datetime(2020, 1, 1, 14),
-        end=datetime(2020, 1, 2, 9),
+        start=dt.datetime(2020, 1, 1, 14),
+        end=dt.datetime(2020, 1, 2, 9),
         horz_overlap="trim",
     )
     plot_schedule = PlotSchedule(new_schedule)
@@ -326,21 +346,18 @@ def transform_test():
 
 def main():
 
-    # TODO: Replace the following code into minimally working example for Schedule class
-
     from mstk.test import sample_proj_folder
-    from mstk.visualize.read_schedule import read_schedule
+    from mstk.read_schedule import read_schedule
 
     test_schedule = read_schedule(sample_proj_folder)
 
     for mc in test_schedule.mc_iter():
         print(mc.mc_id)
-        # for ac in mc_sched.ac_iter():
-        #     print(ac)
+
         for operation in mc.operation_iter():
             print(operation)
 
 
 if __name__ == "__main__":
-    # main()
+    main()
     transform_test()

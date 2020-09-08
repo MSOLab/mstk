@@ -1,31 +1,37 @@
-from typing import List, Dict, Any, Iterator
+from typing import List, Dict, Any, Iterator, Callable
+
 from mstk.schedule.activity import Operation
+
+__all__ = ["Job"]
 
 
 class Job:
+    """A container for job information"""
 
-    __job_id: str
-    contents: Dict[str, Any]
-    operation_list: List[Operation]
+    __slots__ = ["__job_id", "__operation_list", "__contents"]
 
     def __init__(self, job_id):
         self.__job_id: str = job_id
-        self.operation_list = []
-        self.contents = {}
+        self.__operation_list: List[Operation] = []
+        self.__contents: Dict[str, Any] = {}
 
     @property
-    def job_id(self):
+    def job_id(self) -> str:
         return self.__job_id
 
-    @job_id.setter
-    def job_id(self, _job_id):
-        self.__job_id = _job_id
+    @property
+    def operation_list(self) -> List[Operation]:
+        return self.__operation_list
+
+    @property
+    def contents(self) -> Dict[str, Any]:
+        return self.__contents
 
     def add_operation(self, operation: Operation):
-        """adds an operation to the operation list
+        """Adds an operation to the operation list
 
         Args:
-            operation (Operation): [an operation to be added]
+            operation (Operation): an operation to be added
         """
         if operation in self.operation_list:
             raise KeyError(
@@ -34,14 +40,14 @@ class Job:
         self.operation_list.append(operation)
 
     def remove_operation(self, operation: Operation):
-        """removes an operation to the operation list
+        """Removes an operation to the operation list
 
         Args:
-            operation (Operation): [an operation to be removed]
+            operation (Operation): an operation to be removed
         """
         self.operation_list.remove(operation)
 
-    def oper_iter(self) -> Iterator:
+    def oper_iter(self) -> Iterator[Operation]:
         """
         Yields:
             Iterator[Operation]
@@ -50,10 +56,14 @@ class Job:
             yield operation
 
     def add_contents(self, key: str, value: Any):
-        """adds additional contents to Machine
+        """Adds supplementary information of the job to a dictionary [contents]
 
         Args:
-            key (str): [description]
-            value (Any): [description]
+            key (str): an id for the content
+            value (Any): the value to be stored
         """
         self.contents[key] = value
+
+    def display_contents(self, func: Callable, **kwargs):
+        """Prints all the contents (default)"""
+        func(self.contents)

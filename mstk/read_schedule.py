@@ -1,5 +1,6 @@
-import csv, json
 from typing import List, Dict, Optional
+
+import csv, json
 from datetime import datetime
 from dateutil.parser import parse as dt_parse
 
@@ -8,7 +9,13 @@ from mstk.schedule.interval import Interval
 from mstk.schedule.schedule import Schedule
 
 
-def read_machine_info(fname, schedule):
+def read_machine_info(fname: str, schedule: Schedule):
+    """Reads machine information
+
+    Args:
+        fname (str): the file path
+        schedule (Schedule): a schedule to add machines
+    """
     with open(fname, "r", encoding="utf-8") as file_data:
         mc_info_dict = csv.DictReader(file_data)
         for contents in mc_info_dict:
@@ -17,7 +24,14 @@ def read_machine_info(fname, schedule):
                 mc.add_contents(key, value)
 
 
-def read_job_info(fname, schedule):
+def read_job_info(fname: str, schedule: Schedule):
+    """Reads job information
+
+    Args:
+        fname (str): the file path
+        schedule (Schedule): a schedule to add jobs
+    """
+
     with open(fname, "r", encoding="utf-8") as file_data:
         job_info_dict = csv.DictReader(file_data)
         for contents in job_info_dict:
@@ -26,10 +40,26 @@ def read_job_info(fname, schedule):
                 job.add_contents(key, value)
 
 
-def find_horizon(fname, horizon_start, horizon_end):
+def find_horizon(
+    fname: str,
+    horizon_start: Optional[datetime],
+    horizon_end: Optional[datetime],
+):
+    """Detects the earliest and the latest moment in the activity info
+    if explicit start or end is not given
+
+    Args:
+        fname (str): the file path
+        horizon_start (Optional[datetime]): the start of a horizon (if None, find the earliest moment of activities)
+        horizon_end (Optional[datetime]): the end of a horizon (if None, find the latest moment of activities)
+
+    Returns:
+        Interval: a (compact) horizon of activities
+    """
 
     if (horizon_start != None) and (horizon_end != None):
-        return Interval(horizon_start, horizon_end)
+        interval: Interval = Interval(horizon_start, horizon_end)
+        return interval
 
     else:
         min_horizon_start = datetime.max
@@ -49,17 +79,25 @@ def find_horizon(fname, horizon_start, horizon_end):
             horizon_start = min_horizon_start
         if horizon_end == None:
             horizon_end = max_horizon_end
-        return Interval(horizon_start, horizon_end)
+        interval = Interval(horizon_start, horizon_end)
+        return interval
 
 
 def read_schedule(proj_folder: str):
+    """[summary]
 
-    ###
-    ### Set params of the schedule
-    ###
+    Args:
+        proj_folder (str): a project folder that contains metadata
+
+    Raises:
+        ValueError: [description]
+
+    Returns:
+        [type]: [description]
+    """
 
     with open(
-        proj_folder + "\\metadata.json", "r", encoding="utf-8"
+        proj_folder + "\\schedule_metadata.json", "r", encoding="utf-8"
     ) as file_data:
         input_dict = json.load(file_data)
 
@@ -83,7 +121,9 @@ def read_schedule(proj_folder: str):
     else:
         ac_types = AcTypesParam(filename=proj_folder + "\\ac_types.json")
 
-    schedule = Schedule(input_dict["schedule_name"], horizon, ac_types)
+    schedule: Schedule = Schedule(
+        input_dict["schedule_name"], horizon, ac_types
+    )
 
     ### Add machines
     if mc_info_fname != None:
@@ -122,9 +162,11 @@ def read_schedule(proj_folder: str):
                 ac = schedule.add_operation(mc_id, job_id, start, end)
             elif ac_type == ac_types.breakdown:
                 ac = schedule.add_breakdown(mc_id, start, end)
+            else:
+                raise ValueError(f"ac_type [{ac_type}] is not supported")
             for key, value in contents.items():
-
-                ac.add_contents(key, value)
+                if value != "":
+                    ac.add_contents(key, value)
     return schedule
 
 

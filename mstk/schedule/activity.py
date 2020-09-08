@@ -1,20 +1,27 @@
 """ Interval by datetime class definition
-Created at 8th Aug. 2020
+Created on 8th Aug. 2020
 """
+from typing import TYPE_CHECKING, Dict, Any, Tuple, Callable
+
+import datetime as dt
+
 from mstk.schedule.ac_types import AcTypesParam
 from mstk.schedule.interval import Interval
-import datetime as dt
-from typing import TYPE_CHECKING, Dict, Any, Tuple
 
 if TYPE_CHECKING:
     from mstk.schedule.machine import Machine
     from mstk.schedule.job import Job
 
+__all__ = ["Activity", "Idle", "Operation", "Breakdown"]
+
 
 class Activity:
     """Unassigned activity with id, type, interval
 
-    An user-defined activity type can be derived from this class
+    Warning:
+        Do not use this class when assigning an activity to machines;
+
+        Use Operation, Breakdown, Setup or their inherited classes
     """
 
     __slots__ = [
@@ -24,7 +31,7 @@ class Activity:
         "__interval",
         "__contents",
     ]
-    # TODO: Consider adding a member -- mc: Machine
+
     def __init__(
         self,
         ac_id: str,
@@ -39,68 +46,82 @@ class Activity:
         self.__contents: Dict[str, Any] = {}
 
     @property
-    def ac_id(self):
+    def ac_id(self) -> str:
         return self.__ac_id
 
     @property
-    def ac_type(self):
+    def ac_type(self) -> str:
         return self.__ac_type
 
     @property
-    def ac_types_param(self):
+    def ac_types_param(self) -> AcTypesParam:
         return self.__ac_types_param
 
     @property
-    def interval(self):
+    def interval(self) -> Interval:
         return self.__interval
 
     @property
-    def contents(self):
+    def contents(self) -> Dict[str, Any]:
         return self.__contents
 
     def __repr__(self) -> str:
         return f"{self.ac_type}({self.__ac_id}): {self.interval}"
 
-    def includes(self, moment) -> bool:
-        """
+    def includes(self, moment: dt.datetime) -> bool:
+        """Checks whether the activity contains {moment}
+
         Args:
-            moment: datetime or integer(as POSIX timestamp)
+            moment (dt.datetime): a moment to be checked
 
         Returns:
             bool: True if activity includes the moment
-                  (including exactly start or end)
+                  (including the exact start and the end)
         """
+
         if self.interval.in_closed_interval(moment):
             return True
         return False
 
     def change_start_time(self, new_start_time: dt.datetime):
-        """[summary]
+        """Changes the start time of the current activity
 
         Args:
-            new_start_time (dt.datetime): start time to be changed into
+            new_start_time (dt.datetime): start time value to be changed into
         """
 
         self.interval.change_start_time(new_start_time)
 
     def change_end_time(self, new_end_time: dt.datetime):
-        """
+        """Changes the end time of the current activity
+
         Args:
-            new_end_time (dt.datetime): start time to be changed into
+            new_end_time (datetime.datetime): end time to be changed into
         """
+
         self.interval.change_end_time(new_end_time)
 
     def add_contents(self, key: str, value: Any):
-        """adds additional information of the machine to contents dictionary
+        """Adds supplementary information of the activity to a dictionary 'contents'
 
         Args:
-            key (str): [description]
-            value (Any): [description]
+            key (str): an id for the content
+            value (Any): the value to be stored
         """
+
         self.contents[key] = value
 
     def dt_range(self) -> Tuple[dt.datetime, dt.datetime]:
+        """Returns the start and end time of the activity in a tuple
+
+        Returns:
+            Tuple[dt.datetime, dt.datetime]: [description]
+        """
         return self.interval.dt_range()
+
+    def display_contents(self, func: Callable, **kwargs):
+        """Prints all the contents (default)"""
+        func(self.contents)
 
 
 class Idle(Activity):
@@ -154,6 +175,8 @@ class Breakdown(Activity):
 
 
 class Operation(Activity):
+    """An operation activity assigned to a machine and a job"""
+
     __slots__ = ["__ac_type", "__mc", "__job"]
 
     def __init__(
@@ -206,13 +229,12 @@ def main():
     except ValueError as e:
         print("## (Intended) ## ValueError: ", e)
 
-    ### 'includes' test
-    print("\n")
-    print("is 3 included?:", ac_unassigned.includes(3))
-    print("is 4 included?:", ac_unassigned.includes(4))
-    print("is 5.5 included?:", ac_unassigned.includes(5.5))
-    print("is 6 included?:", ac_unassigned.includes(6))
-    print("is 7 included?:", ac_unassigned.includes(7))
+    print("\n## <includes> test")
+    print(f"is 3 included in {ac_unassigned}?:", ac_unassigned.includes(3))
+    print(f"is 4 included in {ac_unassigned}?:", ac_unassigned.includes(4))
+    print(f"is 5.5 included in {ac_unassigned}?:", ac_unassigned.includes(5.5))
+    print(f"is 6 included in {ac_unassigned}?:", ac_unassigned.includes(6))
+    print(f"is 7 included in {ac_unassigned}?:", ac_unassigned.includes(7))
 
 
 if __name__ == "__main__":

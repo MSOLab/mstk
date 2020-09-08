@@ -1,11 +1,14 @@
 """ Interval by datetime class definition
-Created at 8th Aug. 2020
+Created on 8th Aug. 2020
 """
+
 from __future__ import annotations
+
+__all__ = ["Interval"]
 
 # common Python packages
 import datetime as dt
-from typing import Tuple
+from typing import Tuple, Optional
 
 # defined packages
 from mstk.schedule import to_dt
@@ -26,20 +29,44 @@ class Interval:
         self.start = to_dt.to_dt_datetime(start)
         self.end = to_dt.to_dt_datetime(end)
 
-    def duration(self) -> dt.timedelta:
-        """return (end - start) timedelta value"""
-        return self.end - self.start
-
-    def dt_range(self) -> Tuple[dt.datetime, dt.datetime]:
-        return (self.start, self.end)
-
     def __repr__(self) -> str:
         return f"Interval({self.start}, {self.end})"
 
+    def duration(self) -> dt.timedelta:
+        """Returns duration of the interval in timedelta
+
+        Returns:
+            dt.timedelta: (end - start) timedelta value
+        """
+
+        return self.end - self.start
+
+    def dt_range(self) -> Tuple[dt.datetime, dt.datetime]:
+        """Returns a tuple of start and end time
+
+        Returns:
+            Tuple[datetime.datetime, datetime.datetime]: the start and end of the interval
+        """
+
+        return (self.start, self.end)
+
     def start_duration_tuple(self) -> Tuple[dt.datetime, dt.timedelta]:
+        """Returns a tuple of start and duration
+
+        Returns:
+            Tuple[datetime.datetime, datetime.timedelta]: [start, duration]
+        """
         return (self.start, self.end - self.start)
 
     def in_closed_interval(self, moment) -> bool:
+        """Returns true if [moment] is in the interval
+
+        Args:
+            moment (datetime.datetime):
+
+        Returns:
+            bool:
+        """
         _moment = to_dt.to_dt_datetime(moment)
         if self.start <= _moment and _moment <= self.end:
             return True
@@ -47,16 +74,40 @@ class Interval:
             return False
 
     def is_distinct(self, other: "Interval") -> bool:
+        """Returns true if two intervals are distinct (considering a point overlay)
+
+        Args:
+            other (Interval): an interval to be compared
+
+        Raises:
+            TypeError: {other} is not an interval instance
+
+        Returns:
+            bool: True if self and other are distinct
+        """
+
         if isinstance(other, Interval):
             if self.end <= other.start or other.end <= self.start:
                 return True
             else:
                 return False
         else:
-            print("Input is not an interval instance")
-            raise NotImplementedError
+            raise TypeError(f"{other} is not an interval instance")
 
-    def intersect(self, other: "Interval"):
+    def intersect(self, other: "Interval") -> Optional["Interval"]:
+
+        """Returns the intersection of two intervals
+
+        Args:
+            other (Interval): an interval to be referred
+
+        Raises:
+            ValueError: {other} is not an interval instance
+
+        Returns:
+            Optional[Interval]: None if the intersection is empty
+        """
+
         if isinstance(other, Interval):
             if not self.is_distinct(other):
                 return Interval(
@@ -65,13 +116,13 @@ class Interval:
             else:
                 return None
         else:
-            raise ValueError("Input is not an interval instance")
+            raise ValueError(f"{other} is not an interval instance")
 
     def change_start_time(self, new_start_time: dt.datetime):
-        """Update the start time after check validity
+        """Updates the start time after check validity
 
         Args:
-            new_start_time ([type]): datetime.datetime instance or numeric
+            new_start_time (datetime.datetime): datetime.datetime instance or numeric
 
         Raises:
             ValueError: the interval range is invalid
@@ -86,10 +137,10 @@ class Interval:
             self.start = dt_new_start_time
 
     def change_end_time(self, new_end_time: dt.datetime):
-        """Update the end time after check validity
+        """Updates the end time after check validity
 
         Args:
-            new_end_time ([type]): datetime.datetime instance or numeric
+            new_end_time (datetime.datetime): datetime.datetime instance or numeric
 
         Raises:
             ValueError: the interval range is invalid

@@ -5,15 +5,19 @@ Created at 10th Aug. 2020
 import json
 from typing import List
 import os
+
 current_path = os.path.dirname(os.path.abspath(__file__))
 
 
 class AcTypesParam:
     """A container class for activity types
 
-    Default types: [idle, operation, setup, breakdown]
+    Reads .json file to initialize (default keys: [idle, operation, setup, breakdown])
 
     Each type contains a prefix(str) used in naming activities
+
+    :raises ValueError: if 'idle' is not in the keys
+
     """
 
     idle: str
@@ -37,22 +41,22 @@ class AcTypesParam:
         if "idle" not in self.__dict__:
             raise ValueError("Type 'idle' and its display prefix should exist")
 
-    def is_idle(self, given_type: str):
+    def is_idle(self, given_type: str) -> bool:
         if given_type == self.idle:
             return True
         return False
 
-    def is_operation(self, given_type: str):
+    def is_operation(self, given_type: str) -> bool:
         if given_type == self.operation:
             return True
         return False
 
-    def is_setup(self, given_type: str):
+    def is_setup(self, given_type: str) -> bool:
         if given_type == self.setup:
             return True
         return False
 
-    def is_breakdown(self, given_type: str):
+    def is_breakdown(self, given_type: str) -> bool:
         if given_type == self.breakdown:
             return True
         return False

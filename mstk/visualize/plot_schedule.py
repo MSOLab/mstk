@@ -228,8 +228,12 @@ class PlotSchedule:
             overlay_patch_list, match_original=True, hatch="///"
         )
 
-    def draw_Gantt(self, **kwargs):
-        """Draws a Gantt chart based on self.schedule and parameters"""
+    def draw_Gantt(self, export_fname: str = None, **kwargs):
+        """Draws a Gantt chart of self.schedule
+
+        Args:
+            export_fname (str, optional):  a file name to export (Default: **None** to enter an interactive mode)
+        """
 
         # TODO: change color maps according to various operation properties
         self.reset_figure()
@@ -323,7 +327,10 @@ class PlotSchedule:
             self.draw_legend()
         if self.horz_line_on == True:
             self.draw_horz_line()
-        plt.show()
+        if export_fname == None:
+            plt.show()
+        else:
+            self.fig.savefig(export_fname, dpi=150)
 
 
 def main():
@@ -340,8 +347,6 @@ def main():
     )
     plot_option = {"legend_on": True, "horz_line_on": False}
     plt_schedule = PlotSchedule(test_schedule, **plot_option)
-    plt_schedule.draw_Gantt(overlay_schedule=new_schedule)
-    plt_schedule.sort_mc_id_list(str)
     plt_schedule.draw_Gantt(overlay_schedule=new_schedule)
     plt_schedule.sort_job_id_list(str, reverse=True)
     plt_schedule.draw_Gantt(overlay_schedule=new_schedule)

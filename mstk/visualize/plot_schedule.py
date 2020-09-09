@@ -93,9 +93,8 @@ class PlotSchedule:
 
     def reset_figure(self):
         """Initializes figure, axis, and patch lists"""
-        self.fig = plt.figure(
-            figsize=(20, len(self.schedule.mc_id_list) * 0.4)
-        )
+        figsize_y = max(len(self.schedule.mc_id_list) * 0.4, 5)
+        self.fig = plt.figure(figsize=(20, figsize_y))
         self.ax_main = self.fig.add_subplot()
         self.ax_main.set_title(f"{self.schedule.schedule_id}")
 

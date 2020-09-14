@@ -1,6 +1,8 @@
 """ Machine class definition
 Created on 10th Aug. 2020
 """
+from __future__ import annotations
+
 __all__ = ["Machine", "MCSchedule"]
 
 # common Python packages
@@ -59,6 +61,13 @@ class Machine:
         """
         return self.__mc_schedule.ac_iter()
 
+    def ac_iter_of_types(self, ac_type_list: List[str]) -> Iterator[Activity]:
+        """
+        Yields:
+            Iterator[Activity]
+        """
+        return self.__mc_schedule.ac_iter_of_types(ac_type_list)
+
     def operation_iter(self) -> Iterator[Operation]:
         """
         Yields:
@@ -72,6 +81,13 @@ class Machine:
             Iterator[Union[Operation, Breakdown]]
         """
         return self.__mc_schedule.actual_ac_iter()
+
+    def idle_ac_iter(self) -> Iterator[Idle]:
+        """
+        Yields:
+            Iterator[Idle]
+        """
+        return self.__mc_schedule.idle_ac_iter()
 
     def add_contents(self, key: str, value: Any):
         """Adds supplementary information of the machine to a dictionary [contents]
@@ -192,6 +208,25 @@ class MCSchedule:
         for ac_id in self.ac_id_list:
             yield self.ac_dict[ac_id]
 
+    def ac_iter_of_types(self, ac_type_list: List[str]) -> Iterator[Activity]:
+        """
+        Yields:
+            Iterator[Activity]
+        """
+        if not (
+            all(
+                (ac_type in self.ac_types_param.all_types)
+                for ac_type in ac_type_list
+            )
+        ):
+            raise KeyError(
+                f"List {ac_type_list} contains an unsupported activity type"
+            )
+        for ac_id in self.ac_id_list:
+            ac = self.ac_dict[ac_id]
+            if ac.ac_type in ac_type_list:
+                yield ac
+
     def operation_iter(self) -> Iterator[Operation]:
         """
         Yields:
@@ -210,6 +245,18 @@ class MCSchedule:
         for ac_id in self.ac_id_list:
             ac = self.ac_dict[ac_id]
             if ac.ac_type == self.ac_types_param.idle:
+                continue
+            else:
+                yield ac
+
+    def idle_ac_iter(self) -> Iterator[Idle]:
+        """
+        Yields:
+            Iterator[Idle]
+        """
+        for ac_id in self.ac_id_list:
+            ac = self.ac_dict[ac_id]
+            if ac.ac_type != self.ac_types_param.idle:
                 continue
             else:
                 yield ac
@@ -619,6 +666,10 @@ class MCSchedule:
                 break
         return return_interval
 
+    def intersection(self, other: "MCSchedule"):
+        # self.actual_ac_iter()
+        raise NotImplementedError()
+
 
 def main():
     from mstk.schedule.job import Job
@@ -658,7 +709,13 @@ def main():
     for ac in mc_schedule_1.ac_iter():
         print(ac)
 
-    print(mc_schedule_1.ac_id_list_of_interval(Interval(5, 6)))
+    print("\nidle_iter")
+    for ac in mc_schedule_1.ac_iter_of_types(["Idle"]):
+        print(ac)
+
+    # print(mc_schedule_1.ac_id_list_of_interval(Interval(5, 6)))
+
+    # print(mc_schedule_1.intersection(mc_schedule_1))
 
 
 if __name__ == "__main__":

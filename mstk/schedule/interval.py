@@ -19,15 +19,23 @@ class Interval:
     (start <= end) must hold true in initialization
     """
 
-    __slots__ = ["start", "end"]
-    start: dt.datetime
-    end: dt.datetime
+    __slots__ = ["__start", "__end"]
+    __start: dt.datetime
+    __end: dt.datetime
 
     def __init__(self, start: dt.datetime, end: dt.datetime):
         if start > end:
             raise ValueError("Interval start after end")
-        self.start = to_dt.to_dt_datetime(start)
-        self.end = to_dt.to_dt_datetime(end)
+        self.__start = to_dt.to_dt_datetime(start)
+        self.__end = to_dt.to_dt_datetime(end)
+
+    @property
+    def start(self):
+        return self.__start
+
+    @property
+    def end(self):
+        return self.__end
 
     def __repr__(self) -> str:
         return f"Interval({self.start}, {self.end})"
@@ -134,7 +142,7 @@ class Interval:
                 + f" comes after the end time {self.end}!"
             )
         else:
-            self.start = dt_new_start_time
+            self.__start = dt_new_start_time
 
     def change_end_time(self, new_end_time: dt.datetime):
         """Updates the end time after check validity
@@ -152,7 +160,7 @@ class Interval:
                 + f" precedes the start time {self.start}!"
             )
         else:
-            self.end = dt_new_end_time
+            self.__end = dt_new_end_time
 
 
 def main():

@@ -31,8 +31,8 @@ def to_dt_datetime(moment: Union[int, dt.datetime]) -> dt.datetime:
     """
     if isinstance(moment, dt.datetime):
         return moment
-    elif isinstance(moment, int):
-
+    elif isinstance(moment, int) or isinstance(moment, float):
+        # elif moment.isnumeric():
         return dt.datetime.fromtimestamp(moment)
     else:
         raise TypeError(

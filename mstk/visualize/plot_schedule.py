@@ -119,7 +119,7 @@ class PlotSchedule:
         self.ax_main.xaxis.set_major_locator(locator)
         self.ax_main.xaxis.set_major_formatter(formatter)
         n = len(self.mc_id_list)
-        self.ax_main.set_ylim(0, n * 1.1)
+        self.ax_main.set_ylim(-0.1, n * 1.1)
         self.ax_main.set_yticks([1.1 * i + 0.55 for i in range(n)])
         self.ax_main.set_yticklabels(self.mc_id_list)
 

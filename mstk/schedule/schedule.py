@@ -221,7 +221,9 @@ class Schedule:
             ValueError: **horz_overlap** is not valid
 
         Returns:
-            Optional[Interval]: a trimmed interval if exists
+            Optional[Interval]
+                a trimmed interval, if exists
+                None, otherwise
         """
         if horz_overlap in ["exclude"]:
             if (horizon.in_closed_interval(interval.start)) and (

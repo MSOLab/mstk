@@ -123,8 +123,12 @@ class PlotSchedule:
         self.ax_main.set_yticks([1.1 * i + 0.55 for i in range(n)])
         self.ax_main.set_yticklabels(self.mc_id_list)
 
-    def draw_legend(self):
-        """Draw legends on the second windows"""
+    def draw_legend(self, job_facecolor_dict: Dict[str, str]):
+        """Draw legends on the second windows
+
+        Args:
+            job_facecolor_dict (Dict[str, str]): job_id -> facecolor
+        """
         job_list = self.job_id_list
         ncol = int(len(job_list) / 20) + 1
 
@@ -133,8 +137,7 @@ class PlotSchedule:
 
         self.__legend_patch_list = []
         for job_id in job_list:
-            color_id = job_list.index(job_id)
-            face_color = self.cmap.material_cmap(color_id)[0]
+            face_color = job_facecolor_dict[job_id]
             legend_patch = patches.Rectangle(
                 (0, 0), 0, 0, facecolor=face_color, alpha=1, label=job_id
             )
@@ -227,31 +230,51 @@ class PlotSchedule:
             overlay_patch_list, match_original=True, hatch="///"
         )
 
-    def draw_Gantt(self, export_fname: str = None, **kwargs):
+    def draw_Gantt(
+        self,
+        export_fname: str = "",
+        plt_show: bool = False,
+        job_facecolor_dict: Dict[str, str] = dict(),
+        job_fontcolor_dict: Dict[str, str] = dict(),
+        dpi: int = 150,
+        **kwargs,
+    ):
         """Draws a Gantt chart of self.schedule
 
         Args:
-            export_fname (str, optional):  a file name to export (Default: **None** to enter an interactive mode)
+            export_fname (str, optional)
+                a file name to export. Defaults to "".
+            plt_show (bool, optional)
+                If True, execute plt.show(). Defaults to False.
+            job_facecolor_dict (Dict[str, str], optional)
+                job_id -> color hex code. Defaults to dict().
+            job_fontcolor_dict (Dict[str, str], optional)
+                job_id -> color hex code. Defaults to dict().
+            dpi (int, optional): used for savefig option. Defaults to 150.
         """
-
+        job_list = self.job_id_list
+        print("job_list:", job_list)
         # TODO: change color maps according to various operation properties
+        if not job_facecolor_dict:
+            for idx, job_id in enumerate(job_list):
+                job_facecolor_dict[job_id] = self.cmap.material_cmap(idx)[0]
+        if not job_fontcolor_dict:
+            for idx, job_id in enumerate(job_list):
+                job_fontcolor_dict[job_id] = self.cmap.material_cmap(idx)[1]
         self.reset_figure()
+        print("job_facecolor_dict:", job_facecolor_dict)
+        print("job_fontcolor_dict:", job_fontcolor_dict)
 
-        job_list = self.schedule.job_id_list
         for target_mc_index, target_mc_id in enumerate(self.mc_id_list):
             target_mc_schedule = self.schedule.mc_dict[
                 target_mc_id
             ].mc_schedule
-
             for ac in target_mc_schedule.actual_ac_iter():
-
                 start = mdates.date2num(ac.interval.start)
                 end = mdates.date2num(ac.interval.end)
                 proc = end - start
-
                 if ac.ac_type == self.schedule.ac_types_param.operation:
-                    job_id = job_list.index(ac.job.job_id)
-                    face_color = self.cmap.material_cmap(job_id)[0]
+                    face_color = job_facecolor_dict[ac.job.job_id]
                     ac_patch = patches.Rectangle(
                         (start, 1.1 * target_mc_index),
                         proc,
@@ -323,13 +346,15 @@ class PlotSchedule:
 
         self.fig.canvas.mpl_connect("button_press_event", on_patch_click)
         if self.legend_on == True:
-            self.draw_legend()
+            self.draw_legend(job_facecolor_dict)
         if self.horz_line_on == True:
             self.draw_horz_line()
-        if export_fname == None:
+        if export_fname:
+            self.fig.savefig(export_fname, dpi=dpi)
+        if plt_show:
             plt.show()
-        else:
-            self.fig.savefig(export_fname, dpi=150)
+        job_facecolor_dict.clear()
+        job_fontcolor_dict.clear()
 
 
 def main():

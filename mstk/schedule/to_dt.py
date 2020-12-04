@@ -24,7 +24,11 @@ def to_dt_datetime(moment: Union[int, dt.datetime]) -> dt.datetime:
     """if moment is an integer, convert to datetime.datetime
 
     Args:
-        moment ([type]): datetime.datetime instance or numeric
+        moment (Union[int, datetime.datetime])
+            numeric or datetime.datetime instance
+
+    Raises:
+        TypeError: if unsupported type is given
 
     Returns:
         datetime.datetime

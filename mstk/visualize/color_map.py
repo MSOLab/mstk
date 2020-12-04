@@ -12,7 +12,8 @@ current_path = os.path.dirname(os.path.abspath(__file__))
 
 
 class Cmap:
-    """A class for colormaps"""
+    """A class for default colormaps
+    """
 
     def __init__(
         self,
@@ -45,6 +46,8 @@ class Cmap:
     def material_cmap(self, index: int) -> Tuple[str, str]:
         """Selects a color using material design colormap with 14 sets (9 levels in each)
 
+        Order of colors from: https://sashamaps.net/docs/resources/20-colors/
+
         Args:
             index (int): index for the color
 
@@ -53,20 +56,18 @@ class Cmap:
         """
         color_list = [
             "red",
-            "pink",
-            "purple",
-            # "deep_purple",
-            "indigo",
-            "blue",
-            "light_blue",
-            "cyan",
-            "teal",
             "green",
-            # "light_green",
-            "lime",
             "yellow",
+            "blue",
             "deep_orange",
+            "purple",
+            "cyan",
+            "pink",
+            "lime",
+            "teal",
             "brown",
+            "light_blue",
+            "indigo",
             "blue_grey",
         ]
         num_color = len(color_list)  # number of cmaps to use
@@ -84,7 +85,6 @@ class Cmap:
 
 
 def main():
-
     cmap = Cmap()
     for i in range(300):
         print(i, cmap.material_cmap(i))

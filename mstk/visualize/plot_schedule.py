@@ -253,7 +253,6 @@ class PlotSchedule:
             dpi (int, optional): used for savefig option. Defaults to 150.
         """
         job_list = self.job_id_list
-        print("job_list:", job_list)
         # TODO: change color maps according to various operation properties
         if not job_facecolor_dict:
             for idx, job_id in enumerate(job_list):
@@ -262,8 +261,6 @@ class PlotSchedule:
             for idx, job_id in enumerate(job_list):
                 job_fontcolor_dict[job_id] = self.cmap.material_cmap(idx)[1]
         self.reset_figure()
-        print("job_facecolor_dict:", job_facecolor_dict)
-        print("job_fontcolor_dict:", job_fontcolor_dict)
 
         for target_mc_index, target_mc_id in enumerate(self.mc_id_list):
             target_mc_schedule = self.schedule.mc_dict[

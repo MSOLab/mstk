@@ -352,6 +352,7 @@ class PlotSchedule:
             plt.show()
         job_facecolor_dict.clear()
         job_fontcolor_dict.clear()
+        plt.close()
 
 
 def main():

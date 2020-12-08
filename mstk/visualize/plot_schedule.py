@@ -254,10 +254,14 @@ class PlotSchedule:
         """
         job_list = self.job_id_list
         # TODO: change color maps according to various operation properties
+        use_default_job_facecolor = False
+        use_default_job_fontcolor = False
         if not job_facecolor_dict:
+            use_default_job_facecolor = True
             for idx, job_id in enumerate(job_list):
                 job_facecolor_dict[job_id] = self.cmap.material_cmap(idx)[0]
         if not job_fontcolor_dict:
+            use_default_job_fontcolor = True
             for idx, job_id in enumerate(job_list):
                 job_fontcolor_dict[job_id] = self.cmap.material_cmap(idx)[1]
         self.reset_figure()
@@ -350,9 +354,13 @@ class PlotSchedule:
             self.fig.savefig(export_fname, dpi=dpi)
         if plt_show:
             plt.show()
-        job_facecolor_dict.clear()
-        job_fontcolor_dict.clear()
+
+        # make things tidy
         plt.close()
+        if use_default_job_facecolor:
+            job_facecolor_dict.clear()
+        if use_default_job_fontcolor:
+            job_fontcolor_dict.clear()
 
 
 def main():

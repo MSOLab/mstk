@@ -17,4 +17,6 @@ setuptools.setup(
     ],
     zip_safe=False,
     python_requires=">=3.7",
+    package_data={"": ["schedule/ac_types.json", "visualize/color_map.json"]},
+    include_package_data=True,
 )

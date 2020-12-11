@@ -356,8 +356,7 @@ class PlotSchedule:
             plt.show()
 
         # make things tidy
-        plt.clf()
-        plt.close()
+        plt.close("all")
         if use_default_job_facecolor:
             job_facecolor_dict.clear()
         if use_default_job_fontcolor:

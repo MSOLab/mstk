@@ -8,7 +8,7 @@ __all__ = ["Interval"]
 
 # common Python packages
 import datetime as dt
-from typing import Tuple, Optional
+from typing import Optional, Tuple
 
 # defined packages
 from mstk.schedule import to_dt
@@ -81,7 +81,7 @@ class Interval:
         else:
             return False
 
-    def is_distinct(self, other: "Interval") -> bool:
+    def is_distinct(self, other) -> bool:
         """Returns true if two intervals are distinct (considering a point overlay)
 
         Args:
@@ -102,7 +102,7 @@ class Interval:
         else:
             raise TypeError(f"{other} is not an interval instance")
 
-    def intersect(self, other: "Interval") -> Optional["Interval"]:
+    def intersect(self, other) -> Optional[Interval]:
 
         """Returns the intersection of two intervals
 

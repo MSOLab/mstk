@@ -5,25 +5,24 @@ from __future__ import annotations
 
 __all__ = ["Machine", "MCSchedule"]
 
-# common Python packages
-from typing import List, Dict, Tuple, Any, Iterator, Union, Callable
-
 import datetime as dt
 import warnings
 
+# common Python packages
+from typing import Any, Callable, Dict, Iterator, List, Tuple, Union
+
 # defined packages
 from mstk.schedule import to_dt
-from mstk.schedule.interval import Interval
-from mstk.schedule.activity import Activity, Idle, Operation, Breakdown
 from mstk.schedule.ac_types import AcTypesParam
+from mstk.schedule.interval import Interval
+from mstk.schedule.activity import Activity, Breakdown, Idle, Operation
 
 
 class Machine:
     __slots__ = ["__mc_id", "__contents", "__mc_schedule"]
 
     def __init__(
-        self,
-        mc_id: str,
+        self, mc_id: str,
     ):
         self.__mc_id: str = mc_id
         self.__contents: Dict[str, Any] = {}
@@ -38,10 +37,7 @@ class Machine:
 
     @property
     def mc_schedule(self):
-        try:
-            return self.__mc_schedule
-        except:
-            raise
+        return self.__mc_schedule
 
     def reset_schedule(self, horizon: Interval, ac_types_param: AcTypesParam):
         """Reset the mc_schedule
@@ -50,7 +46,7 @@ class Machine:
             horizon (Interval): a new horizon to be assigned
             ac_types_param (AcTypesParam): a container of ac types
         """
-        self.__mc_schedule = MCSchedule(
+        self.__mc_schedule: MCSchedule = MCSchedule(
             self.mc_id, self, horizon, ac_types_param
         )
 
@@ -666,7 +662,7 @@ class MCSchedule:
                 break
         return return_interval
 
-    def intersection(self, other: "MCSchedule"):
+    def intersection(self, other: MCSchedule):
         # self.actual_ac_iter()
         raise NotImplementedError()
 
@@ -685,10 +681,7 @@ def main():
         "test ops 1", Interval(1, 3), machine_1, job_1, ac_types_param
     )
     ac_breakdown_1 = Breakdown(
-        "test brkdown 1",
-        Interval(4, 8),
-        machine_1,
-        ac_types_param,
+        "test brkdown 1", Interval(4, 8), machine_1, ac_types_param,
     )
     mc_schedule_1.add_activity(ac_operation_1)
     mc_schedule_1.add_activity(ac_breakdown_1)

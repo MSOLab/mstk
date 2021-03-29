@@ -1,4 +1,4 @@
-from typing import List, Dict, Any, Iterator, Callable
+from typing import Any, Callable, Dict, Iterator, List
 
 from mstk.schedule.activity import Operation
 

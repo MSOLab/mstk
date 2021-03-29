@@ -1,7 +1,6 @@
 __all__ = ["PlotSchedule"]
-from typing import List, Dict, Iterator, Callable, Any
+from typing import List, Dict, Callable, Any
 
-import matplotlib
 from matplotlib import pyplot as plt
 from matplotlib.collections import PatchCollection, LineCollection
 import matplotlib.patches as patches

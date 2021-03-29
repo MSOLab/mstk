@@ -4,16 +4,14 @@ Created on 13th Aug. 2020
 
 __all__ = ["Schedule"]
 
-from typing import TYPE_CHECKING, List, Dict, Iterator, Optional
-
-
 import datetime as dt
+from typing import Dict, Iterator, List, Optional
 
-from mstk.schedule.interval import Interval
-from mstk.schedule.machine import Machine
 from mstk.schedule.ac_types import AcTypesParam
-from mstk.schedule.activity import Activity, Operation, Breakdown
+from mstk.schedule.activity import Breakdown, Operation
+from mstk.schedule.interval import Interval
 from mstk.schedule.job import Job
+from mstk.schedule.machine import Machine
 
 
 class Schedule:
@@ -328,9 +326,9 @@ class Schedule:
 
 def transform_test():
     ### Transformation test
+    from mstk.read_schedule import read_schedule
     from mstk.test import sample_proj_folder
     from mstk.visualize.plot_schedule import PlotSchedule
-    from mstk.read_schedule import read_schedule
 
     test_schedule = read_schedule(sample_proj_folder)
     mc_id_list = test_schedule.mc_id_list[
@@ -348,8 +346,8 @@ def transform_test():
 
 def main():
 
-    from mstk.test import sample_proj_folder
     from mstk.read_schedule import read_schedule
+    from mstk.test import sample_proj_folder
 
     test_schedule = read_schedule(sample_proj_folder)
 

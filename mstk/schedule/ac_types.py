@@ -5,8 +5,8 @@ Created at 10th Aug. 2020
 __all__ = ["AcTypesParam"]
 
 import json
-from typing import List
 import os
+from typing import List
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 

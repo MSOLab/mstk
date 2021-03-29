@@ -1,6 +1,7 @@
-from typing import List, Dict, Optional
+from typing import Dict, Optional
 
-import csv, json
+import csv
+import json
 from datetime import datetime
 from dateutil.parser import parse as dt_parse
 

@@ -1,8 +1,8 @@
 """moment to datetime.datetime function
 Created on 10th Aug. 2020
 """
-from typing import Union, List
 import datetime as dt
+from typing import Union
 
 __all__ = ["to_dt_datetime"]
 

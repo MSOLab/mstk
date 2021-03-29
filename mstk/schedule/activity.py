@@ -1,16 +1,15 @@
 """ Interval by datetime class definition
 Created on 8th Aug. 2020
 """
-from typing import TYPE_CHECKING, Dict, Any, Tuple, Callable
-
 import datetime as dt
+from typing import TYPE_CHECKING, Any, Callable, Dict, Tuple
 
 from mstk.schedule.ac_types import AcTypesParam
 from mstk.schedule.interval import Interval
 
 if TYPE_CHECKING:
-    from mstk.schedule.machine import Machine
     from mstk.schedule.job import Job
+    from mstk.schedule.machine import Machine
 
 __all__ = ["Activity", "Idle", "Operation", "Breakdown"]
 
@@ -33,10 +32,7 @@ class Activity:
     ]
 
     def __init__(
-        self,
-        ac_id: str,
-        interval: Interval,
-        ac_types_param: AcTypesParam,
+        self, ac_id: str, interval: Interval, ac_types_param: AcTypesParam,
     ):
         self.__ac_id: str = ac_id
         self.__ac_types_param = ac_types_param
@@ -211,7 +207,7 @@ def main():
     ac_unassigned = Activity("test ac 1", Interval(2, 5), ac_types_param)
     print("## Original: \n\t", ac_unassigned)
 
-    ### change time test
+    # change time test
 
     ac_unassigned.change_start_time(4)
     print("## Changed start time: \n\t", ac_unassigned)

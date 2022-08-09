@@ -7,8 +7,17 @@ import matplotlib.patches as patches
 import matplotlib.dates as mdates
 import matplotlib.lines as lines
 
+import matplotlib.font_manager
 from mstk.schedule.schedule import Schedule
 from mstk.visualize.color_map import Cmap
+import matplotlib.font_manager as fm
+
+# path = "NanumGothic.otf"
+# font_name = fm.FontProperties(fname=path, size=50).get_name()
+# plt.rc("font", family=font_name)
+# fm_ = matplotlib.font_manager.FontManager()
+# fm_.addfont("NanumGothic.otf")
+plt.rc("font", family="NanumGothic")
 
 
 class PlotSchedule:
@@ -93,7 +102,7 @@ class PlotSchedule:
     def reset_figure(self):
         """Initializes figure, axis, and patch lists"""
         figsize_y = max(len(self.schedule.mc_id_list) * 0.4, 5)
-        self.fig = plt.figure(figsize=(20, figsize_y))
+        self.fig = plt.figure(figsize=(10, figsize_y * 0.75))
         self.ax_main = self.fig.add_subplot()
         self.ax_main.set_title(f"{self.schedule.schedule_id}")
 
@@ -113,7 +122,7 @@ class PlotSchedule:
 
         # set x_axis in datetime format
         locator = mdates.AutoDateLocator(minticks=4)
-        formatter = mdates.AutoDateFormatter(locator)
+        formatter = mdates.ConciseDateFormatter(locator)
 
         self.ax_main.xaxis.set_major_locator(locator)
         self.ax_main.xaxis.set_major_formatter(formatter)
@@ -351,8 +360,10 @@ class PlotSchedule:
             self.draw_horz_line()
         if export_fname:
             self.fig.savefig(export_fname, dpi=dpi)
-        if plt_show:
+        elif plt_show:
             plt.show()
+        else:
+            return self.ax_main, self.ax_legend
 
         # make things tidy
         plt.close("all")
@@ -378,7 +389,7 @@ def main():
     plt_schedule = PlotSchedule(test_schedule, **plot_option)
     plt_schedule.draw_Gantt(overlay_schedule=new_schedule)
     plt_schedule.sort_job_id_list(str, reverse=True)
-    plt_schedule.draw_Gantt(overlay_schedule=new_schedule)
+    plt_schedule.draw_Gantt(overlay_schedule=new_schedule, plt_show=True)
 
 
 if __name__ == "__main__":

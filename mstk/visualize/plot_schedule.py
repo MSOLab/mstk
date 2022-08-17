@@ -34,7 +34,11 @@ class PlotSchedule:
         self.__job_id_list: List[str] = [
             job_id for job_id in schedule.job_id_list
         ]
-
+        figsize_y = max(len(self.schedule.mc_id_list) * 0.4, 5)
+        if "fig" in kwargs:
+            self.fig = kwargs["fig"]
+        else:
+            self.fig = plt.figure(figsize=(10, figsize_y * 0.75))
         self.cmap = Cmap()
         self.__legend_patch_list: List[patches.Rectangle] = []
         self.__horz_line_list: List[lines.Line2D] = []
@@ -101,8 +105,7 @@ class PlotSchedule:
 
     def reset_figure(self):
         """Initializes figure, axis, and patch lists"""
-        figsize_y = max(len(self.schedule.mc_id_list) * 0.4, 5)
-        self.fig = plt.figure(figsize=(10, figsize_y * 0.75))
+        plt.clf()
         self.ax_main = self.fig.add_subplot()
         self.ax_main.set_title(f"{self.schedule.schedule_id}")
 
@@ -266,13 +269,25 @@ class PlotSchedule:
         use_default_job_fontcolor = False
         if not job_facecolor_dict:
             use_default_job_facecolor = True
-            for idx, job_id in enumerate(job_list):
-                job_facecolor_dict[job_id] = self.cmap.material_cmap(idx)[0]
+            _job_facecolor_dict = {
+                job_id: self.cmap.material_cmap(idx)[0]
+                for idx, job_id in enumerate(job_list)
+            }
+        else:
+            _job_facecolor_dict = job_facecolor_dict
         if not job_fontcolor_dict:
             use_default_job_fontcolor = True
-            for idx, job_id in enumerate(job_list):
-                job_fontcolor_dict[job_id] = self.cmap.material_cmap(idx)[1]
-        self.reset_figure()
+            _job_fontcolor_dict = {
+                job_id: self.cmap.material_cmap(idx)[1]
+                for idx, job_id in enumerate(job_list)
+            }
+
+        else:
+            _job_fontcolor_dict = job_fontcolor_dict
+        if "fig" in kwargs:
+            self.fig = kwargs["fig"]
+        else:
+            self.reset_figure()
 
         for target_mc_index, target_mc_id in enumerate(self.mc_id_list):
             target_mc_schedule = self.schedule.mc_dict[
@@ -283,7 +298,7 @@ class PlotSchedule:
                 end = mdates.date2num(ac.interval.end)
                 proc = end - start
                 if ac.ac_type == self.schedule.ac_types_param.operation:
-                    face_color = job_facecolor_dict[ac.job.job_id]
+                    face_color = _job_facecolor_dict[ac.job.job_id]
                     ac_patch = patches.Rectangle(
                         (start, 1.1 * target_mc_index),
                         proc,
@@ -355,7 +370,7 @@ class PlotSchedule:
 
         self.fig.canvas.mpl_connect("button_press_event", on_patch_click)
         if self.legend_on == True:
-            self.draw_legend(job_facecolor_dict)
+            self.draw_legend(_job_facecolor_dict)
         if self.horz_line_on == True:
             self.draw_horz_line()
         if export_fname:
@@ -368,9 +383,9 @@ class PlotSchedule:
         # make things tidy
         plt.close("all")
         if use_default_job_facecolor:
-            job_facecolor_dict.clear()
+            _job_facecolor_dict.clear()
         if use_default_job_fontcolor:
-            job_fontcolor_dict.clear()
+            _job_fontcolor_dict.clear()
 
 
 def main():

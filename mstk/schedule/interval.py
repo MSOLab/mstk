@@ -25,7 +25,7 @@ class Interval:
 
     def __init__(self, start: dt.datetime, end: dt.datetime):
         if start > end:
-            raise ValueError("Interval start after end")
+            raise ValueError(f"Interval ({start}, {end}) starts after ending")
         self.__start = to_dt.to_dt_datetime(start)
         self.__end = to_dt.to_dt_datetime(end)
 

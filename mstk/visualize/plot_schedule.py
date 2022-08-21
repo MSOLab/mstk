@@ -34,17 +34,30 @@ class PlotSchedule:
         self.__job_id_list: List[str] = [
             job_id for job_id in schedule.job_id_list
         ]
+
         figsize_y = max(len(self.schedule.mc_id_list) * 0.4, 5)
         if "fig" in kwargs:
             self.fig = kwargs["fig"]
         else:
             self.fig = plt.figure(figsize=(10, figsize_y * 0.75))
+            # self.ax_main = self.fig.add_subplot()
+
         self.cmap = Cmap()
+        self.job_facecolor_dict = {
+            job_id: self.cmap.material_cmap(idx)[0]
+            for idx, job_id in enumerate(self.job_id_list)
+        }
+
+        self.job_fontcolor_dict = {
+            job_id: self.cmap.material_cmap(idx)[1]
+            for idx, job_id in enumerate(self.job_id_list)
+        }
         self.__legend_patch_list: List[patches.Rectangle] = []
         self.__horz_line_list: List[lines.Line2D] = []
         self.__operation_patch_list: List[patches.Rectangle] = []
         self.__breakdown_patch_list: List[patches.Rectangle] = []
-
+        self.reset_figure()
+        self.connect_signals()
         # **kwargs
         self.legend_on = kwargs["legend_on"] if "legend_on" in kwargs else True
         self.horz_line_on = (
@@ -103,11 +116,19 @@ class PlotSchedule:
             reverse (bool, optional): whether to sort in a descending order. Defaults to False.
         """
 
+    def update_mc_id_list(self, _mc_id_list: List[str]):
+        self.__mc_id_list = _mc_id_list
+        self.__mc_id_list.reverse()
+
+        self.reset_figure()
+
     def reset_figure(self):
         """Initializes figure, axis, and patch lists"""
-        plt.clf()
+        # plt.clf()
+        self.fig.clear()
         self.ax_main = self.fig.add_subplot()
-        self.ax_main.set_title(f"{self.schedule.schedule_id}")
+        if self.schedule.schedule_id:
+            self.ax_main.set_title(f"{self.schedule.schedule_id}")
 
         self.format_ax_main()
 
@@ -134,6 +155,36 @@ class PlotSchedule:
         self.ax_main.set_yticks([1.1 * i + 0.55 for i in range(n)])
         self.ax_main.set_yticklabels(self.mc_id_list)
 
+    def connect_signals(self):
+        def on_patch_click(event):
+            """Triggers displaying contents for clicked objects
+
+            Args:
+                event (matplotlib.backend_bases.MouseEvent): a mouse click event
+            """
+            for tick in self.ax_main.yaxis.majorTicks:
+                cont, ind = tick.label.contains(event)
+                if cont:
+                    mc = self.schedule.mc_dict[tick.label._text]
+                    mc.display_contents(print)
+                    return
+
+            cont, ind = self.operation_patch_collection.contains(event)
+            if cont:
+                index = ind["ind"][0]
+                ac = self.operation_patch_list[index].ac
+                ac.display_contents(print)
+                return
+
+            cont, ind = self.breakdown_patch_collection.contains(event)
+            if cont:
+                index = ind["ind"][0]
+                ac = self.breakdown_patch_list[index].ac
+                ac.display_contents(print)
+                return
+
+        self.fig.canvas.mpl_connect("button_press_event", on_patch_click)
+
     def draw_legend(self, job_facecolor_dict: Dict[str, str]):
         """Draw legends on the second windows
 
@@ -148,7 +199,7 @@ class PlotSchedule:
 
         self.__legend_patch_list = []
         for job_id in job_list:
-            face_color = job_facecolor_dict[job_id]
+            face_color = self.job_facecolor_dict[job_id]
             legend_patch = patches.Rectangle(
                 (0, 0), 0, 0, facecolor=face_color, alpha=1, label=job_id
             )
@@ -245,8 +296,6 @@ class PlotSchedule:
         self,
         export_fname: str = "",
         plt_show: bool = False,
-        job_facecolor_dict: Dict[str, str] = dict(),
-        job_fontcolor_dict: Dict[str, str] = dict(),
         dpi: int = 150,
         **kwargs,
     ):
@@ -257,37 +306,29 @@ class PlotSchedule:
                 a file name to export. Defaults to "".
             plt_show (bool, optional)
                 If True, execute plt.show(). Defaults to False.
-            job_facecolor_dict (Dict[str, str], optional)
-                job_id -> color hex code. Defaults to dict().
-            job_fontcolor_dict (Dict[str, str], optional)
-                job_id -> color hex code. Defaults to dict().
             dpi (int, optional): used for savefig option. Defaults to 150.
         """
         job_list = self.job_id_list
         # TODO: change color maps according to various operation properties
-        use_default_job_facecolor = False
-        use_default_job_fontcolor = False
-        if not job_facecolor_dict:
-            use_default_job_facecolor = True
-            _job_facecolor_dict = {
-                job_id: self.cmap.material_cmap(idx)[0]
-                for idx, job_id in enumerate(job_list)
-            }
-        else:
-            _job_facecolor_dict = job_facecolor_dict
-        if not job_fontcolor_dict:
-            use_default_job_fontcolor = True
-            _job_fontcolor_dict = {
-                job_id: self.cmap.material_cmap(idx)[1]
-                for idx, job_id in enumerate(job_list)
-            }
+        # use_default_job_facecolor = False
+        # use_default_job_fontcolor = False
+        # if not job_facecolor_dict:
+        #     use_default_job_facecolor = True
+        #     _job_facecolor_dict = {
+        #         job_id: self.cmap.material_cmap(idx)[0]
+        #         for idx, job_id in enumerate(job_list)
+        #     }
+        # else:
+        #     _job_facecolor_dict = job_facecolor_dict
+        # if not job_fontcolor_dict:
+        #     use_default_job_fontcolor = True
+        #     _job_fontcolor_dict = {
+        #         job_id: self.cmap.material_cmap(idx)[1]
+        #         for idx, job_id in enumerate(job_list)
+        #     }
 
-        else:
-            _job_fontcolor_dict = job_fontcolor_dict
-        if "fig" in kwargs:
-            self.fig = kwargs["fig"]
-        else:
-            self.reset_figure()
+        # else:
+        #     _job_fontcolor_dict = job_fontcolor_dict
 
         for target_mc_index, target_mc_id in enumerate(self.mc_id_list):
             target_mc_schedule = self.schedule.mc_dict[
@@ -298,7 +339,7 @@ class PlotSchedule:
                 end = mdates.date2num(ac.interval.end)
                 proc = end - start
                 if ac.ac_type == self.schedule.ac_types_param.operation:
-                    face_color = _job_facecolor_dict[ac.job.job_id]
+                    face_color = self.job_facecolor_dict[ac.job.job_id]
                     ac_patch = patches.Rectangle(
                         (start, 1.1 * target_mc_index),
                         proc,
@@ -341,36 +382,36 @@ class PlotSchedule:
                 self.generate_overlay_schedule(overlay_schedule)
             )
 
-        def on_patch_click(event):
-            """Triggers displaying contents for clicked objects
+        # def on_patch_click(event):
+        #     """Triggers displaying contents for clicked objects
 
-            Args:
-                event (matplotlib.backend_bases.MouseEvent): a mouse click event
-            """
-            for tick in self.ax_main.yaxis.majorTicks:
-                cont, ind = tick.label.contains(event)
-                if cont:
-                    mc = self.schedule.mc_dict[tick.label._text]
-                    mc.display_contents(print)
-                    return
+        #     Args:
+        #         event (matplotlib.backend_bases.MouseEvent): a mouse click event
+        #     """
+        #     for tick in self.ax_main.yaxis.majorTicks:
+        #         cont, ind = tick.label.contains(event)
+        #         if cont:
+        #             mc = self.schedule.mc_dict[tick.label._text]
+        #             mc.display_contents(print)
+        #             return
 
-            cont, ind = self.operation_patch_collection.contains(event)
-            if cont:
-                index = ind["ind"][0]
-                ac = self.operation_patch_list[index].ac
-                ac.display_contents(print)
-                return
+        #     cont, ind = self.operation_patch_collection.contains(event)
+        #     if cont:
+        #         index = ind["ind"][0]
+        #         ac = self.operation_patch_list[index].ac
+        #         ac.display_contents(print)
+        #         return
 
-            cont, ind = self.breakdown_patch_collection.contains(event)
-            if cont:
-                index = ind["ind"][0]
-                ac = self.breakdown_patch_list[index].ac
-                ac.display_contents(print)
-                return
+        #     cont, ind = self.breakdown_patch_collection.contains(event)
+        #     if cont:
+        #         index = ind["ind"][0]
+        #         ac = self.breakdown_patch_list[index].ac
+        #         ac.display_contents(print)
+        #         return
 
-        self.fig.canvas.mpl_connect("button_press_event", on_patch_click)
+        # self.fig.canvas.mpl_connect("button_press_event", on_patch_click)
         if self.legend_on == True:
-            self.draw_legend(_job_facecolor_dict)
+            self.draw_legend(self.job_facecolor_dict)
         if self.horz_line_on == True:
             self.draw_horz_line()
         if export_fname:
@@ -378,14 +419,14 @@ class PlotSchedule:
         elif plt_show:
             plt.show()
         else:
-            return self.ax_main, self.ax_legend
+            return self.ax_main  # , self.ax_legend
 
         # make things tidy
-        plt.close("all")
-        if use_default_job_facecolor:
-            _job_facecolor_dict.clear()
-        if use_default_job_fontcolor:
-            _job_fontcolor_dict.clear()
+        # plt.close("all")
+        # if use_default_job_facecolor:
+        #     _job_facecolor_dict.clear()
+        # if use_default_job_fontcolor:
+        #     _job_fontcolor_dict.clear()
 
 
 def main():

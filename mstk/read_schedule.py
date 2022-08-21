@@ -10,14 +10,14 @@ from mstk.schedule.interval import Interval
 from mstk.schedule.schedule import Schedule
 
 
-def read_machine_info(fname: str, schedule: Schedule):
+def read_machine_info(fname: str, schedule: Schedule, _encoding: str):
     """Reads machine information
 
     Args:
         fname (str): the file path
         schedule (Schedule): a schedule to add machines
     """
-    with open(fname, "r", encoding="utf-8") as file_data:
+    with open(fname, "r", encoding=_encoding) as file_data:
         mc_info_dict = csv.DictReader(file_data)
         for contents in mc_info_dict:
             mc = schedule.add_machine(contents["mc_id"])
@@ -25,7 +25,7 @@ def read_machine_info(fname: str, schedule: Schedule):
                 mc.add_contents(key, value)
 
 
-def read_job_info(fname: str, schedule: Schedule):
+def read_job_info(fname: str, schedule: Schedule, _encoding: str):
     """Reads job information
 
     Args:
@@ -33,7 +33,7 @@ def read_job_info(fname: str, schedule: Schedule):
         schedule (Schedule): a schedule to add jobs
     """
 
-    with open(fname, "r", encoding="utf-8") as file_data:
+    with open(fname, "r", encoding=_encoding) as file_data:
         job_info_dict = csv.DictReader(file_data)
         for contents in job_info_dict:
             job = schedule.add_job(contents["job_id"])
@@ -45,6 +45,7 @@ def find_horizon(
     fname: str,
     horizon_start: Optional[datetime],
     horizon_end: Optional[datetime],
+    _encoding: str,
 ):
     """Detects the earliest and the latest moment in the activity info
     if explicit start or end is not given
@@ -66,7 +67,7 @@ def find_horizon(
         min_horizon_start = datetime.max
         max_horizon_end = datetime.min
 
-        with open(fname, "r", encoding="utf-8") as file_data:
+        with open(fname, "r", encoding=_encoding) as file_data:
             ac_info_dict = csv.DictReader(file_data)
             for contents in ac_info_dict:
                 start = dt_parse(contents["start"])
@@ -84,7 +85,7 @@ def find_horizon(
         return interval
 
 
-def read_schedule(proj_folder: str):
+def read_schedule(proj_folder: str, _encoding: str = "utf-8-sig"):
     """[summary]
 
     Args:
@@ -115,7 +116,9 @@ def read_schedule(proj_folder: str):
     if input_dict["horizon"]["end"] != None:
         horizon_end = dt_parse(input_dict["horizon"]["end"])
 
-    horizon = find_horizon(ac_info_full_name, horizon_start, horizon_end)
+    horizon = find_horizon(
+        ac_info_full_name, horizon_start, horizon_end, _encoding
+    )
 
     if input_dict["file_info"]["ac_types_info"] == None:
         ac_types = AcTypesParam()
@@ -129,19 +132,19 @@ def read_schedule(proj_folder: str):
     ### Add machines
     if mc_info_fname != None:
         fname = proj_folder + "\\" + mc_info_fname
-        read_machine_info(fname, schedule)
+        read_machine_info(fname, schedule, _encoding)
     else:
         mc_id_dict: Dict[str, bool] = {}
 
     ### Add jobs
     if job_info_fname != None:
         fname = proj_folder + "\\" + job_info_fname
-        read_job_info(fname, schedule)
+        read_job_info(fname, schedule, _encoding)
     else:
         job_id_dict: Dict[str, bool] = {}
 
     ### Add activities
-    with open(ac_info_full_name, "r", encoding="utf-8") as file_data:
+    with open(ac_info_full_name, "r", encoding=_encoding) as file_data:
         ac_info_dict = csv.DictReader(file_data)
         for contents in ac_info_dict:
             mc_id = contents["mc_id"]
